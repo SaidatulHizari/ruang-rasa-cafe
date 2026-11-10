@@ -1,34 +1,83 @@
+/* ======================================
+   RUANG RASA CAFE - SHARED STYLES
+   Every page loads this file. Page-specific
+   styles stay inside each page's <style>.
+   ====================================== */
+
+
+/* ======================================
+   1. DESIGN TOKENS (change colours here)
+   ====================================== */
+
+:root {
+    --brown-900: #49372d;   /* sidebar, headings */
+    --brown-700: #7a5640;   /* primary buttons */
+    --brown-500: #a77c5b;   /* active link, accents */
+    --brown-200: #eadfd5;   /* borders */
+    --cream-100: #f3e9df;   /* icon tiles, chips */
+    --cream-50:  #f8f5f0;   /* page background */
+    --white:     #ffffff;
+
+    --text:       #44372e;
+    --text-muted: #75665b;   /* 5.6:1 contrast on white (WCAG AA) */
+    --heading:    #49372d;   /* headings and strong text */
+    --accent-text: #7a5640;  /* brown text on light chips */
+
+    --pending-bg:   #fff0d6;  --pending-fg:   #a46b16;
+    --preparing-bg: #e7edff;  --preparing-fg: #4864ad;
+    --completed-bg: #e2f4e8;  --completed-fg: #378052;
+    --danger:       #c8504f;
+
+    --radius:    16px;
+    --radius-sm: 10px;
+    --shadow:    0 4px 18px rgba(70, 45, 30, .06);
+    --shadow-lg: 0 10px 30px rgba(70, 45, 30, .14);
+    --sidebar-width: 245px;
+}
+
+
+/* ======================================
+   2. BASE
+   ====================================== */
 
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
 body {
+    margin: 0;
     font-family: 'Poppins', sans-serif;
-    background-color: #F5EFE6;
+    background: var(--cream-50);
+    color: var(--text);
 }
 
-/* Login Page */
-.login-page {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+.form-label {
+    color: var(--heading);
+    font-weight: 500;
 }
 
-.login-container {
-    width: 100%;
-    max-width: 430px;
+.form-control,
+.form-select {
+    border-radius: var(--radius-sm);
+    border-color: #e5ddd5;
 }
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brown-500);
+    box-shadow: 0 0 0 .2rem rgba(167, 124, 91, .18);
+}
+
+
+/* ======================================
+   3. LOGIN PAGE
+   ====================================== */
 
 .login-card {
-    background-color: #FFFFFF;
+    background: var(--white);
     padding: 40px;
     border-radius: 18px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
 }
 
 .cafe-icon {
@@ -36,33 +85,8 @@ body {
     margin-bottom: 10px;
 }
 
-.login-card h2 {
-    color: #49352B;
-    font-weight: 700;
-}
-
-.login-card h4 {
-    color: #49352B;
-    font-weight: 600;
-}
-
-.form-label {
-    color: #49352B;
-    font-weight: 500;
-}
-
-.form-control {
-    padding: 12px;
-    border-radius: 8px;
-}
-
-.form-control:focus {
-    border-color: #B68B68;
-    box-shadow: 0 0 0 0.2rem rgba(182, 139, 104, 0.2);
-}
-
 .login-btn {
-    background-color: #49352B;
+    background: var(--brown-900);
     color: white;
     padding: 12px;
     border-radius: 8px;
@@ -70,286 +94,1123 @@ body {
 }
 
 .login-btn:hover {
-    background-color: #B68B68;
+    background: var(--brown-500);
     color: white;
 }
 
 .error-message {
-    color: #DC3545;
+    color: #dc3545;
     font-size: 13px;
     margin-bottom: 10px;
 }
 
-/* DASHBOARD */
 
-.dashboard-page {
-    background-color: #F5EFE6;
+/* ======================================
+   4. APP SHELL: LAYOUT + SIDEBAR
+   ====================================== */
+
+.layout {
     display: flex;
     min-height: 100vh;
 }
 
-/* Sidebar */
 .sidebar {
-    width: 250px;
-    background-color: #49352B;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background: var(--brown-900);
     color: white;
-    padding: 30px 20px;
-    min-height: 100vh;
-    position: fixed;
+    padding: 28px 18px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
-.sidebar h3 {
-    font-weight: 700;
+.sidebar .brand {
     font-size: 23px;
+    font-weight: 800;
+    margin-bottom: 3px;
 }
 
-.sidebar-subtitle {
-    color: #D9C5B4;
-    font-size: 12px;
-    margin-bottom: 35px;
+.sidebar .brand-subtitle {
+    color: #d6c4b5;
+    font-size: 11px;
+    margin-bottom: 30px;
+}
+
+.sidebar .nav-label {
+    color: #bda99a;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin: 20px 12px 12px;
 }
 
 .sidebar a {
-    display: block;
-    color: #F5EFE6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     text-decoration: none;
-    padding: 13px;
-    border-radius: 8px;
-    margin-bottom: 10px;
+    color: #e8ddd5;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    transition: background .2s, color .2s;
 }
 
-.sidebar a:hover,
-.sidebar a.active {
-    background-color: #B68B68;
+.sidebar a:hover {
+    background: rgba(255, 255, 255, .08);
     color: white;
 }
 
-.sidebar .logout-link {
-    margin-top: 50px;
+.sidebar a.active {
+    background: var(--brown-500);
+    color: white;
+    font-weight: 600;
 }
 
-/* Main Content */
+/* Logged-in user card (above Logout) */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, .06);
+}
+
+.sidebar-avatar {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--brown-500);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-user strong {
+    display: block;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.sidebar-user small {
+    color: #bda99a;
+    font-size: 11px;
+}
+
 .main-content {
-    margin-left: 250px;
-    padding: 35px;
-    width: calc(100% - 250px);
+    flex: 1;
+    min-width: 0;
+    padding: 30px;
 }
 
-.top-header {
+
+/* ======================================
+   5. SHARED PAGE PIECES
+   ====================================== */
+
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 35px;
-}
-
-.top-header h2 {
-    color: #49352B;
-    font-weight: 700;
-}
-
-.top-header p {
-    color: #888;
-}
-
-.admin-profile {
-    background: white;
-    padding: 10px 18px;
-    border-radius: 10px;
-}
-
-/* Summary Cards */
-.section-heading {
-    color: #49352B;
-    margin-bottom: 20px;
-}
-
-.summary-card {
-    background: white;
-    padding: 22px;
-    border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-    height: 100%;
-}
-
-.summary-card p {
-    color: #777;
-    margin-bottom: 10px;
-}
-
-.summary-card h3 {
-    color: #49352B;
-    font-weight: 700;
-}
-
-.summary-card span {
-    color: #B68B68;
-    font-size: 12px;
-}
-
-/* Chart and Table */
-.chart-container,
-.recent-orders {
-    background: white;
-    padding: 25px;
-    border-radius: 14px;
-}
-
-.chart-container h4,
-.recent-orders h4 {
-    color: #49352B;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-.status-completed {
-    color: #198754;
-    background: #D1E7DD;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-}
-
-.status-pending {
-    color: #997404;
-    background: #FFF3CD;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-}
-
-footer {
-    text-align: center;
-    color: #888;
-    font-size: 12px;
-    margin-top: 40px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        min-height: auto;
-        position: relative;
-    }
-
-    .dashboard-page {
-        display: block;
-    }
-
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-        padding: 20px;
-    }
-
-    .top-header {
-        align-items: flex-start;
-        gap: 10px;
-    }
-}
-
-/* MENU MANAGEMENT */
-
-.menu-summary {
-    display: flex;
-    gap: 20px;
     flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
-.menu-summary > div {
-    background: white;
-    padding: 20px 25px;
-    border-radius: 12px;
-    min-width: 200px;
-    flex: 1;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+.page-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--heading);
+    margin: 0;
 }
 
-.menu-summary p {
-    color: #777;
+.page-header p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 4px 0 0;
+}
+
+.card-box {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+
+/* Primary brand button, used on every page */
+.btn-brand,
+.btn-brown,
+.btn-add,
+.custom-btn {
+    background: var(--brown-700);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-weight: 600;
+    transition: background .2s, transform .1s;
+}
+
+.btn-brand:hover,
+.btn-brown:hover,
+.btn-add:hover,
+.custom-btn:hover {
+    background: var(--brown-900);
+    color: white;
+}
+
+.btn-brand:active {
+    transform: scale(.98);
+}
+
+.btn-brand:disabled {
+    background: #cbbdb1;
+    color: white;
+    cursor: not-allowed;
+}
+
+/* Status badges (Pending / Preparing / Completed) */
+.status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-pending,
+.status-badge.pending     { background: var(--pending-bg);   color: var(--pending-fg); }
+.status-preparing,
+.status-badge.preparing   { background: var(--preparing-bg); color: var(--preparing-fg); }
+.status-completed,
+.status-badge.completed   { background: var(--completed-bg); color: var(--completed-fg); }
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 30px 15px;
+}
+
+.empty-state .empty-icon {
+    font-size: 34px;
+    display: block;
     margin-bottom: 8px;
 }
 
-.menu-summary h3 {
-    color: #49352B;
+.empty-state p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.empty-action {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: var(--cream-100);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.empty-action:hover {
+    background: var(--brown-700);
+    color: white;
+}
+
+.app-footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 30px;
+}
+
+
+/* ======================================
+   6. MODAL DIALOG (replaces alert/confirm/prompt)
+   ====================================== */
+
+.rr-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(40, 28, 20, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 9999;
+    animation: rrFade .2s ease;
+}
+
+.rr-modal {
+    background: var(--white);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: rrPop .22s ease;
+}
+
+.rr-modal.wide {
+    max-width: 560px;
+}
+
+.rr-modal-header {
+    padding: 20px 22px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.rr-modal-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: var(--cream-100);
+}
+
+.rr-modal-icon.danger {
+    background: #fbe4e3;
+}
+
+.rr-modal-header h5 {
     font-weight: 700;
+    color: var(--heading);
+    margin: 0 0 4px;
 }
 
-.menu-section {
-    background: white;
-    padding: 25px;
+.rr-modal-header p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+}
+
+.rr-modal-body {
+    padding: 18px 22px 0;
+}
+
+.rr-modal-footer {
+    padding: 20px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--brown-200);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-weight: 500;
+}
+
+.btn-ghost:hover {
+    background: var(--cream-50);
+}
+
+.btn-danger-solid {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-weight: 600;
+}
+
+.btn-danger-solid:hover {
+    background: #a83f3e;
+    color: white;
+}
+
+.image-preview {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: var(--cream-100);
+}
+
+@keyframes rrFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rrPop  { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+
+/* ======================================
+   7. ORDER PAGE: POS (menu grid + cart)
+   ====================================== */
+
+.pos-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.pos-toolbar .form-control {
+    max-width: 260px;
+}
+
+.chip-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 18px;
+    scrollbar-width: thin;
+}
+
+.chip {
+    flex-shrink: 0;
+    border: 1px solid var(--brown-200);
+    background: var(--white);
+    color: var(--text);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: .2s;
+}
+
+.chip:hover {
+    border-color: var(--brown-500);
+}
+
+.chip.active {
+    background: var(--brown-900);
+    border-color: var(--brown-900);
+    color: white;
+}
+
+.chip .chip-count {
+    opacity: .65;
+    margin-left: 4px;
+}
+
+.pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+}
+
+.pos-item {
+    position: relative;
+    background: var(--white);
+    border: 2px solid transparent;
     border-radius: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+    padding: 0;
+    text-align: left;
+    box-shadow: var(--shadow);
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    cursor: pointer;
 }
 
-.menu-section h4 {
-    color: #49352B;
+.pos-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.pos-item:focus-visible {
+    outline: none;
+    border-color: var(--brown-500);
+}
+
+.pos-item.in-cart {
+    border-color: var(--brown-500);
+}
+
+.pos-item img {
+    width: 100%;
+    height: 105px;
+    object-fit: cover;
+    display: block;
+    background: var(--cream-100);
+}
+
+.pos-item-info {
+    padding: 10px 12px 12px;
+}
+
+.pos-item-name {
+    font-size: 13px;
     font-weight: 600;
-    margin-bottom: 20px;
+    color: var(--heading);
+    line-height: 1.3;
+    min-height: 34px;
 }
 
-.add-menu-btn {
-    background: #49352B;
+.pos-item-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brown-500);
+    margin-top: 4px;
+}
+
+.pos-qty-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 7px;
+    border-radius: 13px;
+    background: var(--brown-900);
     color: white;
-    padding: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
 }
 
-.add-menu-btn:hover {
-    background: #B68B68;
-    color: white;
+.pos-added {
+    animation: posBump .3s ease;
 }
 
-.menu-heading {
+@keyframes posBump {
+    50% { transform: scale(.96); }
+}
+
+/* Cart panel */
+.cart-panel {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 40px);
+}
+
+.cart-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 14px;
 }
 
-.search-box {
-    max-width: 250px;
+.cart-panel-header h5 {
+    font-weight: 700;
+    margin: 0;
+    color: var(--heading);
 }
 
-.table thead th {
-    background: #F5EFE6;
-    color: #49352B;
+.cart-count-pill {
+    background: var(--cream-100);
+    color: var(--accent-text);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.cart-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 14px -6px;
+    padding: 0 6px;
+    min-height: 120px;
+}
+
+.cart-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--brown-200);
+}
+
+.cart-row:last-child {
+    border-bottom: none;
+}
+
+.cart-row img {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--cream-100);
+}
+
+.cart-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.cart-row-name {
+    font-size: 13px;
+    font-weight: 600;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.edit-btn {
-    background: #B68B68;
-    color: white;
+.cart-row-price {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.qty-stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--brown-200);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.qty-stepper button {
     border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    font-weight: 700;
+    color: var(--accent-text);
 }
 
-.delete-btn {
-    background: #DC3545;
-    color: white;
+.qty-stepper button:hover {
+    background: var(--cream-100);
+}
+
+.qty-stepper span {
+    min-width: 22px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cart-row-subtotal {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 62px;
+    text-align: right;
+}
+
+.cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 2px solid var(--brown-200);
+    padding-top: 14px;
+    margin-bottom: 14px;
+}
+
+.cart-total-row span {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.cart-total {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--heading);
+}
+
+.link-btn {
+    background: none;
     border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: underline;
 }
 
-.edit-btn:hover,
-.delete-btn:hover {
-    opacity: 0.8;
+.link-btn:hover {
+    color: var(--danger);
+}
+
+/* Mobile "view cart" bar */
+.mobile-cart-bar {
+    display: none;
+}
+
+/* Order list */
+.status-select {
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 30px 6px 12px;
+    min-width: 125px;
+    cursor: pointer;
+}
+
+.status-select.pending   { background-color: var(--pending-bg);   color: var(--pending-fg); }
+.status-select.preparing { background-color: var(--preparing-bg); color: var(--preparing-fg); }
+.status-select.completed { background-color: var(--completed-bg); color: var(--completed-fg); }
+
+
+/* ======================================
+   8. RESPONSIVE
+   ====================================== */
+
+@media (max-width: 991.98px) {
+    .cart-panel {
+        position: static;
+        max-height: none;
+    }
+
+    .cart-list {
+        max-height: none;
+    }
+
+    .mobile-cart-bar {
+        display: flex;
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 50;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--brown-900);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 18px;
+        font-weight: 600;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .mobile-cart-bar.hidden {
+        display: none;
+    }
+
+    body.has-cart-bar .main-content {
+        padding-bottom: 90px;
+    }
+}
+
+/* Hidden on desktop; shown on phones below */
+.mobile-topbar,
+.sidebar-overlay {
+    display: none;
 }
 
 @media (max-width: 768px) {
-    .menu-heading {
-        align-items: flex-start;
-        flex-direction: column;
+    .layout {
+        display: block;
     }
 
-    .search-box {
+    /* Top bar with the hamburger button */
+    .mobile-topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        background: var(--brown-900);
+        color: white;
+        padding: 10px 16px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+    }
+
+    .mobile-brand {
+        font-weight: 800;
+        font-size: 18px;
+    }
+
+    .menu-toggle {
+        width: 42px;
+        height: 42px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, .1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .menu-toggle span {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: white;
+        border-radius: 2px;
+    }
+
+    /* Sidebar slides in from the left */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        width: 270px;
+        max-width: 85vw;
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        visibility: hidden;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        visibility: visible;
+        box-shadow: 8px 0 30px rgba(0, 0, 0, .3);
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 950;
+        background: rgba(40, 28, 20, .5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Stop the page scrolling behind the open menu */
+    body.menu-open {
+        overflow: hidden;
+    }
+
+    .main-content {
+        padding: 20px 16px;
+    }
+
+    .page-header h2 {
+        font-size: 20px;
+    }
+
+    .pos-toolbar .form-control {
         max-width: 100%;
     }
 
-    .menu-section {
-        padding: 18px;
+    .pos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
     }
+
+    .rr-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .rr-modal-footer button {
+        width: 100%;
+    }
+}
+
+
+/* ======================================
+   9. ACCESSIBILITY
+   ====================================== */
+
+/* "Skip to main content" link: hidden until a keyboard user presses Tab */
+.skip-link {
+    position: absolute;
+    left: 16px;
+    top: -60px;
+    z-index: 2000;
+    background: var(--brown-900);
+    color: white;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top .2s;
+}
+
+.skip-link:focus {
+    top: 12px;
+    color: white;
+}
+
+.main-content:focus {
+    outline: none;
+}
+
+/* Clear focus ring for keyboard users on every clickable element */
+a:focus-visible,
+button:focus-visible,
+.chip:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 3px solid var(--brown-500);
+    outline-offset: 2px;
+}
+
+.sidebar a:focus-visible,
+.menu-toggle:focus-visible {
+    outline-color: #f3d9c4;
+}
+
+/* Respect "reduce motion" setting in the operating system */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* ======================================
+   10. ICONS (Bootstrap Icons)
+   ====================================== */
+
+.bi {
+    line-height: 1;
+}
+
+.sidebar a .bi,
+.sidebar-action .bi {
+    font-size: 16px;
+    width: 18px;
+    text-align: center;
+}
+
+.summary-icon .bi {
+    color: var(--accent-text);
+}
+
+.corner-icon {
+    color: var(--brown-500);
+    font-size: 17px;
+}
+
+.cafe-icon .bi {
+    color: var(--brown-700);
+}
+
+.custom-toast .toast-icon         { color: #4f8a5b; }
+.custom-toast.error .toast-icon   { color: #c8504f; }
+.custom-toast.info .toast-icon    { color: #4f78a8; }
+
+
+/* ======================================
+   11. SIDEBAR ACTION BUTTONS (dark mode, reset)
+   ====================================== */
+
+.sidebar-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #e8ddd5;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    text-align: left;
+    transition: background .2s, color .2s;
+}
+
+.sidebar-action:hover {
+    background: rgba(255, 255, 255, .08);
+    color: white;
+}
+
+.sidebar-action:focus-visible {
+    outline: 3px solid #f3d9c4;
+    outline-offset: 2px;
+}
+
+
+/* ======================================
+   12. DARK MODE
+   Most colours come from the tokens at the top, so dark mode
+   mostly just swaps those values. The rules after that cover
+   colours that pages still hard-code in their own <style>.
+   ====================================== */
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --brown-900: #2a201a;   /* sidebar */
+    --brown-700: #9a6f50;   /* buttons */
+    --brown-500: #b98b67;
+    --brown-200: #3e332b;   /* borders */
+    --cream-100: #3a2f27;   /* chips, icon tiles */
+    --cream-50:  #1a1512;   /* page background */
+    --white:     #26201b;   /* cards */
+
+    --text:        #ece2d8;
+    --text-muted:  #b5a596;
+    --heading:     #f5ebe1;
+    --accent-text: #e0b994;
+
+    --pending-bg:   #4a3a1c;  --pending-fg:   #f2c771;
+    --preparing-bg: #263352;  --preparing-fg: #a9bff5;
+    --completed-bg: #1f3d2a;  --completed-fg: #93d6a8;
+
+    --shadow:    0 4px 18px rgba(0, 0, 0, .35);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, .5);
+
+    /* Bootstrap's own variables (inputs, tables, text-muted) */
+    --bs-body-bg: var(--cream-50);
+    --bs-body-color: var(--text);
+    --bs-border-color: var(--brown-200);
+    --bs-secondary-color: var(--text-muted);
+    --bs-tertiary-color: var(--text-muted);
+}
+
+/* Cards that pages colour white in their own styles */
+:root[data-theme="dark"] :is(
+    .summary-card, .section-card, .form-card, .report-box,
+    .menu-card, .admin-profile, .empty-menu, .card-box
+) {
+    background: var(--white);
+    border-color: var(--brown-200);
+}
+
+/* Headings and numbers that pages colour dark brown */
+:root[data-theme="dark"] .main-content :is(h1, h2, h3, h4, h5, h6, .page-title, .section-title) {
+    color: var(--heading);
+}
+
+:root[data-theme="dark"] :is(.summary-card h3, .price, .pos-item-price) {
+    color: var(--accent-text);
+}
+
+/* Small icon tiles and category chips */
+:root[data-theme="dark"] :is(.summary-icon, .profile-icon, .category, .category-count) {
+    background: var(--cream-100);
+    color: var(--accent-text);
+}
+
+/* Tables */
+:root[data-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text);
+    --bs-table-hover-bg: rgba(255, 255, 255, .04);
+    --bs-table-hover-color: var(--text);
+    --bs-table-border-color: var(--brown-200);
+}
+
+:root[data-theme="dark"] .table thead th,
+:root[data-theme="dark"] .table th {
+    background: var(--cream-100);
+    color: var(--heading);
+}
+
+:root[data-theme="dark"] .table tbody td {
+    color: var(--text);
+}
+
+/* Inputs on the sales page */
+:root[data-theme="dark"] .filter-control {
+    background: var(--white);
+    color: var(--text);
+    border-color: var(--brown-200);
+}
+
+/* Status pills on the dashboard */
+:root[data-theme="dark"] .status.pending   { background: var(--pending-bg);   color: var(--pending-fg); }
+:root[data-theme="dark"] .status.preparing { background: var(--preparing-bg); color: var(--preparing-fg); }
+:root[data-theme="dark"] .status.completed { background: var(--completed-bg); color: var(--completed-fg); }
+
+/* Toast notifications */
+:root[data-theme="dark"] .custom-toast {
+    background: var(--white);
+    color: var(--text);
+}
+
+/* Grey "outline" buttons (Edit, Receipt) need lighter text */
+:root[data-theme="dark"] .btn-outline-secondary {
+    --bs-btn-color: var(--text);
+    --bs-btn-border-color: var(--brown-200);
+    --bs-btn-hover-bg: var(--cream-100);
+    --bs-btn-hover-color: var(--heading);
+}
+
+/* Active chip and input borders need more contrast on dark cards */
+:root[data-theme="dark"] .chip.active {
+    background: var(--brown-700);
+    border-color: var(--brown-700);
+}
+
+:root[data-theme="dark"] :is(.form-control, .form-select) {
+    border-color: var(--brown-200);
+    background-color: var(--cream-50);
+    color: var(--text);
+}
+
+
+/* ======================================
+   13. CHARTS (donut centre label + legend)
+   ====================================== */
+
+.donut-wrap {
+    position: relative;
+    height: 220px;
+}
+
+.donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.donut-center strong {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--heading);
+}
+
+.donut-center span {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.donut-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text);
+}
+
+.donut-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.donut-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.donut-legend b {
+    color: var(--heading);
 }

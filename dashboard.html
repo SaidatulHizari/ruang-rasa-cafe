@@ -9,78 +9,21 @@
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Shared styles: colours, sidebar, layout, modals -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Login check: sends logged-out visitors to index.html -->
+    <script src="js/auth.js"></script>
+    <!-- Light / dark theme (applied before the page is drawn) -->
+    <script src="js/theme.js"></script>
+
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #f7f4ef;
-            color: #44372e;
-        }
-
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* SIDEBAR */
-        .sidebar {
-            width: 245px;
-            background: #49372d;
-            color: white;
-            padding: 28px 18px;
-            flex-shrink: 0;
-        }
-
-        .brand {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 3px;
-        }
-
-        .brand-subtitle {
-            color: #d6c4b5;
-            font-size: 11px;
-            margin-bottom: 38px;
-        }
-
-        .nav-label {
-            color: #bda99a;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            margin: 20px 12px 12px;
-        }
-
-        .sidebar a {
-            display: block;
-            text-decoration: none;
-            color: #e8ddd5;
-            padding: 13px 14px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            font-size: 13px;
-            transition: 0.3s;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #a77c5b;
-            color: white;
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            flex: 1;
-            min-width: 0;
-            padding: 30px;
-        }
+        /* Sidebar + layout now live in css/style.css */
 
         .topbar {
             display: flex;
@@ -204,8 +147,8 @@
         }
 
         .summary-card small {
-            color: #999;
-            font-size: 10px;
+            color: var(--text-muted);
+            font-size: 11px;
         }
 
         /* SECTION CARDS */
@@ -232,8 +175,8 @@
         }
 
         .section-subtitle {
-            font-size: 10px;
-            color: #999;
+            font-size: 11px;
+            color: var(--text-muted);
             margin-top: 5px;
         }
 
@@ -242,9 +185,6 @@
             height: 280px;
         }
 
-        .apex-chart {
-            min-height: 280px;
-        }
 
         /* TABLE */
         .table {
@@ -269,7 +209,7 @@
         .status {
             padding: 6px 10px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 11px;
             display: inline-block;
             font-weight: 600;
         }
@@ -292,7 +232,7 @@
         .empty-message {
             text-align: center;
             padding: 25px;
-            color: #999;
+            color: var(--text-muted);
         }
 
         .view-link {
@@ -308,45 +248,13 @@
 
         .footer {
             text-align: center;
-            color: #aaa;
-            font-size: 10px;
+            color: var(--text-muted);
+            font-size: 11px;
             margin-top: 30px;
         }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .layout {
-                display: block;
-            }
-
-            .sidebar {
-                width: 100%;
-                padding: 17px;
-            }
-
-            .brand {
-                font-size: 21px;
-            }
-
-            .brand-subtitle {
-                margin-bottom: 12px;
-            }
-
-            .nav-label {
-                display: none;
-            }
-
-            .sidebar a {
-                display: inline-block;
-                padding: 9px 10px;
-                margin: 3px;
-                font-size: 11px;
-            }
-
-            .main-content {
-                padding: 18px 13px;
-            }
-
             .topbar h2 {
                 font-size: 19px;
             }
@@ -373,29 +281,59 @@
 
 <body>
 
+<a href="#main" class="skip-link">Skip to main content</a>
+
 <div class="layout">
 
     <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <!-- MOBILE TOP BAR (only visible on small screens) -->
+    <header class="mobile-topbar">
+        <button type="button" class="menu-toggle" id="menuToggle"
+            aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-brand"><i class="bi bi-cup-hot-fill" aria-hidden="true"></i> Ruang Rasa</span>
+    </header>
 
-        <div class="brand">Ruang Rasa</div>
+    <!-- Dark background behind the open mobile menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+
+        <div class="brand"><i class="bi bi-cup-hot-fill" aria-hidden="true"></i> Ruang Rasa</div>
         <div class="brand-subtitle">Café Management System</div>
 
         <div class="nav-label">MAIN MENU</div>
 
-        <a href="dashboard.html" class="active">🏠 Dashboard</a>
-        <a href="menu.html">🍽️ Menu Management</a>
-        <a href="orders.html">🧾 Order Management</a>
-        <a href="sales.html">📊 Sales Report</a>
+        <a href="dashboard.html" class="active" aria-current="page"><i class="bi bi-house-door" aria-hidden="true"></i> Dashboard</a>
+        <a href="menu.html"><i class="bi bi-journal-text" aria-hidden="true"></i> Menu Management</a>
+        <a href="orders.html"><i class="bi bi-receipt" aria-hidden="true"></i> Order Management</a>
+        <a href="sales.html"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Sales Report</a>
 
         <div class="nav-label">ACCOUNT</div>
 
-        <a href="index.html">↪ Logout</a>
+        <div class="sidebar-user">
+            <span class="sidebar-avatar" data-user-initial>A</span>
+            <div>
+                <strong data-username>Admin</strong>
+                <small data-user-role>Administrator</small>
+            </div>
+        </div>
+
+        <button type="button" class="sidebar-action" data-theme-toggle aria-pressed="false">
+            <i class="bi bi-moon-stars" aria-hidden="true"></i> <span>Dark mode</span>
+        </button>
+
+        <button type="button" class="sidebar-action" data-reset-demo>
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Reset demo data
+        </button>
+
+        <a href="index.html" data-logout><i class="bi bi-box-arrow-left" aria-hidden="true"></i> Logout</a>
 
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-content">
+    <main class="main-content" id="main" tabindex="-1">
 
         <!-- TOPBAR -->
         <div class="topbar">
@@ -408,8 +346,11 @@
             </div>
 
             <div class="admin-profile">
-                <div class="profile-icon">👤</div>
-                <span>Administrator</span>
+                <div class="profile-icon" data-user-initial>A</div>
+                <div>
+                    <div data-username>Admin</div>
+                    <small class="text-muted fw-normal" data-user-role>Administrator</small>
+                </div>
             </div>
 
         </div>
@@ -418,9 +359,10 @@
         <section class="welcome-banner">
 
             <div>
-                <span class="welcome-tag">☕ YOUR DAILY CAFÉ OVERVIEW</span>
+                <span class="welcome-tag"><i class="bi bi-cup-hot" aria-hidden="true"></i> YOUR DAILY CAFÉ OVERVIEW</span>
 
-                <h3>Good day, Admin!</h3>
+                <!-- Greeting changes with the time of day (see js/layout.js) -->
+                <h3 data-greeting>Good day, Admin!</h3>
 
                 <p>
                     Manage your café operations and monitor your business
@@ -437,8 +379,8 @@
                 <div class="summary-card">
 
                     <div class="summary-top">
-                        <div class="summary-icon">💰</div>
-                        <span>📈</span>
+                        <div class="summary-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
+                        <span class="corner-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span>
                     </div>
 
                     <h6>Total Sales</h6>
@@ -452,8 +394,8 @@
                 <div class="summary-card">
 
                     <div class="summary-top">
-                        <div class="summary-icon">🧾</div>
-                        <span>📋</span>
+                        <div class="summary-icon"><i class="bi bi-receipt" aria-hidden="true"></i></div>
+                        <span class="corner-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span>
                     </div>
 
                     <h6>Total Orders</h6>
@@ -467,8 +409,8 @@
                 <div class="summary-card">
 
                     <div class="summary-top">
-                        <div class="summary-icon">🍽️</div>
-                        <span>✨</span>
+                        <div class="summary-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+                        <span class="corner-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
                     </div>
 
                     <h6>Menu Items</h6>
@@ -482,8 +424,8 @@
                 <div class="summary-card">
 
                     <div class="summary-top">
-                        <div class="summary-icon">⏳</div>
-                        <span>🔔</span>
+                        <div class="summary-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
+                        <span class="corner-icon"><i class="bi bi-bell" aria-hidden="true"></i></span>
                     </div>
 
                     <h6>Pending Orders</h6>
@@ -508,7 +450,7 @@
                                 Completed order revenue over the last 6 months
                             </div>
                         </div>
-                        <span>📊</span>
+                        <span class="corner-icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span>
                     </div>
 
                     <div class="chart-container">
@@ -528,10 +470,10 @@
                                 Current order distribution
                             </div>
                         </div>
-                        <span>🍩</span>
+                        <span class="corner-icon"><i class="bi bi-pie-chart" aria-hidden="true"></i></span>
                     </div>
 
-                    <div id="orderChart" class="apex-chart"></div>
+                    <div id="orderChart"></div>
 
                 </div>
             </div>
@@ -551,10 +493,10 @@
                                 Total quantities ordered by customers
                             </div>
                         </div>
-                        <span>🏆</span>
+                        <span class="corner-icon"><i class="bi bi-trophy" aria-hidden="true"></i></span>
                     </div>
 
-                    <div id="bestSellingChart" class="apex-chart"></div>
+                    <div id="bestSellingChart" class="chart-container"></div>
 
                 </div>
             </div>
@@ -623,14 +565,14 @@
 
 </div>
 
-<!-- CHART.JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- CHART LIBRARY (version pinned so an update can never break the charts) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 
-<!-- APEXCHARTS -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-<!-- MAIN SYSTEM DATA -->
-<script src="js/script.js"></script>
+<!-- APP SCRIPTS (order matters: each file uses the ones above it) -->
+<script src="js/ui.js"></script>
+<script src="js/data.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/charts.js"></script>
 
 <!-- DASHBOARD ANALYTICS -->
 <script>
@@ -641,9 +583,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // 1. FORMAT CURRENCY
     // ==================================
 
-    function formatRM(amount) {
-        return "RM " + Number(amount).toFixed(2);
-    }
+    // formatRM() comes from js/ui.js (shared by every page)
 
 
     // ==================================
@@ -653,8 +593,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const currentDate = document.getElementById("currentDate");
 
     if (currentDate) {
+        const session = getSession();
+        const name = session
+            ? session.username.charAt(0).toUpperCase() + session.username.slice(1)
+            : "Admin";
+
         currentDate.textContent =
-            "Welcome back, Admin! | " +
+            "Welcome back, " + name + "! | " +
             new Date().toLocaleDateString("en-MY", {
                 weekday: "long",
                 day: "numeric",
@@ -694,375 +639,130 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     // ==================================
-    // 4. MONTHLY SALES - CHART.JS
+    // 4. MONTHLY SALES (bar chart)
     // ==================================
 
-    function parseOrderDate(dateString) {
+    const monthly = getMonthlySales(completedOrders);
 
-        if (!dateString) return null;
+    new Chart(document.getElementById("salesChart"), {
 
-        const parts = dateString.split("/");
+        type: "bar",
 
-        if (parts.length !== 3) return null;
+        data: {
+            labels: monthly.labels,
+            datasets: [{
+                label: "Sales (RM)",
+                data: monthly.values,
+                backgroundColor: CHART_COLORS.accent,
+                hoverBackgroundColor: CHART_COLORS.accentStrong,
+                borderRadius: 8,
+                borderSkipped: false,
+                maxBarThickness: 48
+            }]
+        },
 
-        const day = Number(parts[0]);
-        const month = Number(parts[1]) - 1;
-        const year = Number(parts[2]);
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
 
-        const date = new Date(year, month, day);
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return " Sales: " + formatRM(context.raw);
+                        }
+                    }
+                }
+            },
 
-        if (isNaN(date.getTime())) return null;
-
-        return date;
-    }
-
-    const monthLabels = [];
-    const monthlySales = [];
-
-    const today = new Date();
-
-    for (let i = 5; i >= 0; i--) {
-
-        const date = new Date(
-            today.getFullYear(),
-            today.getMonth() - i,
-            1
-        );
-
-        monthLabels.push(
-            date.toLocaleDateString("en-US", {
-                month: "short",
-                year: "2-digit"
-            })
-        );
-
-        monthlySales.push(0);
-    }
-
-    completedOrders.forEach(function(order) {
-
-        const orderDate = parseOrderDate(order.date);
-
-        if (!orderDate) return;
-
-        const monthDifference =
-            (today.getFullYear() - orderDate.getFullYear()) * 12 +
-            (today.getMonth() - orderDate.getMonth());
-
-        if (monthDifference >= 0 && monthDifference < 6) {
-
-            const index = 5 - monthDifference;
-
-            monthlySales[index] += Number(order.total || 0);
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) { return "RM " + value; }
+                    }
+                }
+            }
         }
-
     });
 
-    const salesCanvas = document.getElementById("salesChart");
 
-    if (salesCanvas) {
+    // ==================================
+    // 5. ORDER STATUS (donut, shared with the sales page)
+    // ==================================
 
-        new Chart(salesCanvas, {
+    renderStatusDonut("orderChart", orders);
+
+
+    // ==================================
+    // 6. BEST-SELLING MENU ITEMS (horizontal bar chart)
+    // ==================================
+
+    const bestSellers = getBestSellers(orders);
+    const bestSellingElement = document.getElementById("bestSellingChart");
+
+    if (bestSellers.length === 0) {
+
+        bestSellingElement.innerHTML = emptyStateHTML(
+            "trophy",
+            "Best-sellers appear here once customers place orders.",
+            "orders.html",
+            "Go to orders →"
+        );
+
+    } else {
+
+        bestSellingElement.innerHTML =
+            '<canvas role="img" aria-label="Best-selling menu items"></canvas>';
+
+        new Chart(bestSellingElement.querySelector("canvas"), {
 
             type: "bar",
 
             data: {
-                labels: monthLabels,
-
+                labels: bestSellers.map(function(item) { return item[0]; }),
                 datasets: [{
-                    label: "Sales (RM)",
-                    data: monthlySales,
-                    backgroundColor: "#a77c5b",
-                    hoverBackgroundColor: "#49372d",
-                    borderRadius: 8,
-                    borderSkipped: false,
-                    maxBarThickness: 48
+                    label: "Quantity ordered",
+                    data: bestSellers.map(function(item) { return item[1]; }),
+                    backgroundColor: CHART_COLORS.browns,
+                    borderRadius: 6,
+                    maxBarThickness: 28
                 }]
             },
 
             options: {
-
+                indexAxis: "y",          // horizontal bars
                 responsive: true,
                 maintainAspectRatio: false,
 
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return " Sales: " +
-                                    formatRM(context.raw);
+                                return " " + context.raw + " items sold";
                             }
                         }
                     }
                 },
 
                 scales: {
-
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: "#8c7d72",
-                            font: {
-                                family: "Poppins",
-                                size: 10
-                            }
-                        }
-                    },
-
-                    y: {
                         beginAtZero: true,
-
-                        ticks: {
-                            color: "#8c7d72",
-                            callback: function(value) {
-                                return "RM " + value;
-                            }
-                        },
-
-                        grid: {
-                            color: "#f0ebe5"
-                        }
-                    }
-
-                }
-
-            }
-
-        });
-
-    }
-
-
-    // ==================================
-    // 5. ORDER STATUS - APEXCHARTS
-    // ==================================
-
-    const statusCounts = [
-        orders.filter(order => order.status === "Completed").length,
-        orders.filter(order => order.status === "Pending").length,
-        orders.filter(order => order.status === "Preparing").length
-    ];
-
-    const orderChartOptions = {
-
-        series: statusCounts,
-
-        chart: {
-            type: "donut",
-            height: 280,
-            fontFamily: "Poppins",
-            toolbar: {
-                show: false
-            }
-        },
-
-        labels: ["Completed", "Pending", "Preparing"],
-
-        colors: ["#8aaa79", "#e5b76b", "#8299c9"],
-
-        legend: {
-            position: "bottom",
-            fontSize: "11px"
-        },
-
-        dataLabels: {
-            enabled: true
-        },
-
-        stroke: {
-            width: 3,
-            colors: ["#ffffff"]
-        },
-
-        plotOptions: {
-            pie: {
-                donut: {
-                    size: "65%",
-                    labels: {
-                        show: true,
-
-                        total: {
-                            show: true,
-                            label: "Total Orders",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            color: "#8c7d72",
-
-                            formatter: function() {
-                                return orders.length;
-                            }
-                        }
+                        ticks: { precision: 0 },   // whole numbers only
+                        title: { display: true, text: "Quantity Ordered", font: { size: 11 } }
+                    },
+                    y: {
+                        grid: { display: false }
                     }
                 }
             }
-        },
-
-        tooltip: {
-            y: {
-                formatter: function(value) {
-                    return value + " orders";
-                }
-            }
-        },
-
-        responsive: [{
-            breakpoint: 480,
-            options: {
-                chart: {
-                    height: 250
-                },
-                legend: {
-                    position: "bottom"
-                }
-            }
-        }]
-
-    };
-
-    const orderChartElement =
-        document.getElementById("orderChart");
-
-    if (orderChartElement) {
-
-        const orderChart = new ApexCharts(
-            orderChartElement,
-            orderChartOptions
-        );
-
-        orderChart.render();
-
-    }
-
-
-    // ==================================
-    // 6. BEST SELLING MENU - APEXCHARTS
-    // ==================================
-
-    const menuSales = {};
-
-    orders.forEach(function(order) {
-
-        order.items.forEach(function(item) {
-
-            if (!menuSales[item.name]) {
-                menuSales[item.name] = 0;
-            }
-
-            menuSales[item.name] += Number(item.quantity || 0);
-
         });
-
-    });
-
-    const bestSellingItems = Object.entries(menuSales)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-    const bestLabels = bestSellingItems.map(item => item[0]);
-    const bestValues = bestSellingItems.map(item => item[1]);
-
-    const bestSellingOptions = {
-
-        series: [{
-            name: "Quantity Sold",
-            data: bestValues
-        }],
-
-        chart: {
-            type: "bar",
-            height: 280,
-            fontFamily: "Poppins",
-            toolbar: {
-                show: false
-            }
-        },
-
-        plotOptions: {
-            bar: {
-                horizontal: true,
-                borderRadius: 5,
-                barHeight: "55%",
-                distributed: true
-            }
-        },
-
-        colors: [
-            "#49372d",
-            "#795548",
-            "#a77c5b",
-            "#c49a78",
-            "#d8b99b"
-        ],
-
-        dataLabels: {
-            enabled: true
-        },
-
-        xaxis: {
-            categories: bestLabels,
-
-            title: {
-                text: "Quantity Ordered",
-                style: {
-                    fontSize: "11px",
-                    fontWeight: 500
-                }
-            }
-        },
-
-        yaxis: {
-            labels: {
-                style: {
-                    fontSize: "11px"
-                }
-            }
-        },
-
-        legend: {
-            show: false
-        },
-
-        grid: {
-            borderColor: "#f0ebe5"
-        },
-
-        tooltip: {
-            y: {
-                formatter: function(value) {
-                    return value + " items sold";
-                }
-            }
-        }
-
-    };
-
-    const bestSellingElement =
-        document.getElementById("bestSellingChart");
-
-    if (bestSellingElement) {
-
-        if (bestValues.length > 0) {
-
-            const bestSellingChart = new ApexCharts(
-                bestSellingElement,
-                bestSellingOptions
-            );
-
-            bestSellingChart.render();
-
-        } else {
-
-            bestSellingElement.innerHTML =
-                '<div class="empty-message">No sales data available yet.</div>';
-
-        }
-
     }
 
 
@@ -1083,8 +783,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
             recentOrdersTable.innerHTML = `
                 <tr>
-                    <td colspan="5" class="empty-message">
-                        No orders available yet.
+                    <td colspan="5">
+                        ${emptyStateHTML("receipt", "No orders yet.", "orders.html", "Create the first order →")}
                     </td>
                 </tr>
             `;
@@ -1114,9 +814,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             </strong>
                         </td>
 
-                        <td>${order.customer}</td>
+                        <td>${escapeHTML(order.customer)}</td>
 
-                        <td>${order.date}</td>
+                        <td>${escapeHTML(order.date)}</td>
 
                         <td>
                             <strong>${formatRM(order.total)}</strong>
