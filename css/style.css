@@ -22,11 +22,13 @@
     --text-muted: #75665b;   /* 5.6:1 contrast on white (WCAG AA) */
     --heading:    #49372d;   /* headings and strong text */
     --accent-text: #7a5640;  /* brown text on light chips */
+    --price-text:  #8d6243;  /* prices on white (5.3:1) */
+    --active-bg:   #8f6749;  /* selected nav item, avatar: white text 5:1 */
 
-    --pending-bg:   #fff0d6;  --pending-fg:   #a46b16;
+    --pending-bg:   #fff0d6;  --pending-fg:   #8a5a10;
     --preparing-bg: #e7edff;  --preparing-fg: #4864ad;
-    --completed-bg: #e2f4e8;  --completed-fg: #378052;
-    --danger:       #c8504f;
+    --completed-bg: #e2f4e8;  --completed-fg: #2f6d46;
+    --danger:       #b5403f;
 
     --radius:    16px;
     --radius-sm: 10px;
@@ -134,13 +136,13 @@ body {
 
 .sidebar .brand-subtitle {
     color: #d6c4b5;
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 30px;
 }
 
 .sidebar .nav-label {
-    color: #bda99a;
-    font-size: 11px;
+    color: #d9c9bb;
+    font-size: 12px;
     letter-spacing: 1.5px;
     margin: 20px 12px 12px;
 }
@@ -164,7 +166,7 @@ body {
 }
 
 .sidebar a.active {
-    background: var(--brown-500);
+    background: var(--active-bg);
     color: white;
     font-weight: 600;
 }
@@ -185,7 +187,7 @@ body {
     height: 34px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: var(--brown-500);
+    background: var(--active-bg);
     color: white;
     font-weight: 700;
     font-size: 14px;
@@ -201,8 +203,8 @@ body {
 }
 
 .sidebar-user small {
-    color: #bda99a;
-    font-size: 11px;
+    color: #d9c9bb;
+    font-size: 12px;
 }
 
 .main-content {
@@ -282,7 +284,7 @@ body {
     display: inline-block;
     padding: 5px 12px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -331,7 +333,7 @@ body {
 .app-footer {
     text-align: center;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 12px;
     margin-top: 30px;
 }
 
@@ -500,7 +502,7 @@ body {
 }
 
 .chip .chip-count {
-    opacity: .65;
+    opacity: .85;
     margin-left: 4px;
 }
 
@@ -560,7 +562,7 @@ body {
 .pos-item-price {
     font-size: 13px;
     font-weight: 700;
-    color: var(--brown-500);
+    color: var(--price-text);
     margin-top: 4px;
 }
 
@@ -615,7 +617,7 @@ body {
 .cart-count-pill {
     background: var(--cream-100);
     color: var(--accent-text);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 20px;
@@ -664,7 +666,7 @@ body {
 }
 
 .cart-row-price {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -726,7 +728,8 @@ body {
 .link-btn {
     background: none;
     border: none;
-    padding: 0;
+    padding: 0 4px;
+    min-height: 32px;
     color: var(--text-muted);
     font-size: 12px;
     text-decoration: underline;
@@ -829,8 +832,8 @@ body {
     }
 
     .menu-toggle {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         border: none;
         border-radius: var(--radius-sm);
         background: rgba(255, 255, 255, .1);
@@ -1047,7 +1050,7 @@ button:focus-visible,
     color-scheme: dark;
 
     --brown-900: #2a201a;   /* sidebar */
-    --brown-700: #9a6f50;   /* buttons */
+    --brown-700: #8f6749;   /* buttons */
     --brown-500: #b98b67;
     --brown-200: #3e332b;   /* borders */
     --cream-100: #3a2f27;   /* chips, icon tiles */
@@ -1160,6 +1163,17 @@ button:focus-visible,
    13. CHARTS (donut centre label + legend)
    ====================================== */
 
+/* Month picker above the donut */
+.donut-month {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.donut-month .form-select {
+    width: auto;
+}
+
 .donut-wrap {
     position: relative;
     height: 220px;
@@ -1183,7 +1197,7 @@ button:focus-visible,
 }
 
 .donut-center span {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
     margin-top: 4px;
 }
@@ -1213,4 +1227,905 @@ button:focus-visible,
 
 .donut-legend b {
     color: var(--heading);
+}
+
+
+/* ======================================
+   13. KITCHEN DISPLAY (kitchen.html)
+   Big, high-contrast tickets that can be read from a distance.
+   ====================================== */
+
+.kds-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.kds-clock {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--heading);
+    font-variant-numeric: tabular-nums;
+    margin-right: 6px;
+}
+
+.kds-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.kds-column {
+    background: var(--cream-100);
+    border-radius: var(--radius);
+    padding: 16px;
+    border-top: 5px solid var(--brown-200);
+    min-height: 260px;
+}
+
+.kds-column.pending   { border-top-color: var(--pending-fg); }
+.kds-column.preparing { border-top-color: var(--preparing-fg); }
+
+.kds-column-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--heading);
+    margin: 0 0 14px;
+}
+
+.kds-count {
+    margin-left: auto;
+    min-width: 30px;
+    text-align: center;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: var(--white);
+    font-size: 14px;
+}
+
+.kds-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.kds-ticket {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kds-ticket-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.kds-order-no {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .5px;
+}
+
+.kds-customer {
+    font-size: 17px;
+    color: var(--heading);
+}
+
+.kds-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--cream-100);
+    color: var(--text);
+}
+
+.kds-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 15px;
+    flex-grow: 1;
+}
+
+.kds-items li {
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--brown-200);
+}
+
+.kds-items li:last-child {
+    border-bottom: none;
+}
+
+.kds-qty {
+    display: inline-block;
+    min-width: 30px;
+    font-weight: 700;
+    color: var(--accent-text);
+}
+
+/* Waiting longer than 10 minutes */
+.kds-ticket.late {
+    border-color: var(--danger);
+}
+
+.kds-ticket.late .kds-timer {
+    background: var(--danger);
+    color: white;
+}
+
+/* Just arrived from another tab */
+.kds-ticket.is-new {
+    animation: kds-arrive 1.6s ease-out;
+}
+
+@keyframes kds-arrive {
+    0%   { transform: scale(.94); box-shadow: 0 0 0 0 rgba(167, 124, 91, .7); }
+    40%  { transform: scale(1);   box-shadow: 0 0 0 10px rgba(167, 124, 91, 0); }
+    100% { box-shadow: var(--shadow); }
+}
+
+.kds-column .empty-state {
+    grid-column: 1 / -1;
+}
+
+.kds-done {
+    margin-top: 20px;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+}
+
+.kds-done-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px;
+}
+
+.kds-done-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--completed-bg);
+    color: var(--completed-fg);
+    font-size: 13px;
+}
+
+/* Full screen: hide the sidebar so the tickets get the whole screen */
+.kds-fullscreen .sidebar,
+.kds-fullscreen .mobile-topbar {
+    display: none;
+}
+
+.kds-fullscreen .main-content {
+    margin-left: 0;
+}
+
+@media (max-width: 991.98px) {
+    .kds-board {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kds-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+/* ======================================
+   14. SOLD OUT DISHES
+   Set in Menu Management, shown on the menu and order pages.
+   ====================================== */
+
+.sold-out-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-6deg);
+    z-index: 1;
+    padding: 5px 14px;
+    border-radius: 8px;
+    background: var(--danger);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+    pointer-events: none;
+}
+
+/* Order page: card can't be tapped */
+.pos-item.sold-out {
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.pos-item.sold-out:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.pos-item.sold-out img {
+    filter: grayscale(1);
+    opacity: .5;
+}
+
+.pos-item.sold-out .pos-item-info {
+    opacity: .6;
+}
+
+.pos-item.sold-out .pos-item-price {
+    text-decoration: line-through;
+}
+
+/* Cart line for a dish that sold out after it was added */
+.cart-sold-out {
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* ======================================
+   15. CHANGING A PLACED ORDER
+   Edit banner + read-only list on the order page,
+   NEW / Updated marks on the kitchen screen.
+   ====================================== */
+
+.cart-panel.is-editing {
+    outline: 2px solid var(--preparing-fg);
+    outline-offset: -2px;
+}
+
+.edit-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -6px -6px 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--preparing-bg);
+    color: var(--preparing-fg);
+    font-size: 13px;
+}
+
+.edit-banner[hidden],
+.locked-items[hidden] {
+    display: none;
+}
+
+.edit-banner .link-btn {
+    color: inherit;
+    font-weight: 600;
+}
+
+.locked-items {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--cream-100);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.locked-items .locked-title {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.locked-items ul {
+    margin: 0 0 4px;
+    padding-left: 18px;
+}
+
+/* Order list */
+.added-tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--preparing-bg);
+    color: var(--preparing-fg);
+}
+
+.table tbody tr.row-editing td {
+    background: var(--preparing-bg);
+}
+
+/* "View All Orders" lands on the list, not the top of the page */
+#orderList {
+    scroll-margin-top: 16px;
+}
+
+/* Dashboard: recent order rows open that order */
+.table tbody tr.row-link {
+    cursor: pointer;
+}
+
+.row-link-anchor {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.row-link-anchor:hover,
+tr.row-link:hover .row-link-anchor {
+    color: var(--accent-text);
+    text-decoration: underline;
+}
+
+/* Orders page: the order opened from the dashboard flashes twice */
+.table tbody tr.row-flash td,
+.table-stack tbody tr.row-flash {
+    animation: rowFlash 1.6s ease-in-out 2;
+}
+
+@keyframes rowFlash {
+    /* no 0%/100%: starts and ends on the row's own colour */
+    40%      { background-color: var(--pending-bg); }
+}
+
+/* Kitchen ticket */
+.kds-items li.kds-added {
+    background: var(--pending-bg);
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 6px;
+}
+
+.kds-new-tag {
+    margin-left: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--danger);
+    color: white;
+    vertical-align: middle;
+}
+
+.kds-updated {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--preparing-bg);
+    color: var(--preparing-fg);
+    vertical-align: middle;
+}
+
+
+/* ======================================
+   16. PAYMENT
+   Method buttons, cash + change in the cart,
+   "paid by" tag in order tables.
+   ====================================== */
+
+.payment-box {
+    margin-bottom: 14px;
+}
+
+.payment-box[hidden],
+.cash-fields[hidden],
+.refund-note[hidden] {
+    display: none;
+}
+
+.payment-box legend {
+    float: none;
+    width: auto;
+    margin-bottom: 6px;
+}
+
+/* Three equal buttons; the real radio stays for keyboard + screen readers */
+.pay-methods {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.pay-method {
+    position: relative;
+    margin: 0;
+}
+
+.pay-method input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    cursor: pointer;
+}
+
+.pay-method span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 4px;
+    border: 1px solid var(--brown-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    transition: .2s;
+}
+
+.pay-method span .bi {
+    font-size: 18px;
+}
+
+.pay-method:hover span {
+    border-color: var(--brown-500);
+}
+
+.pay-method input:checked + span {
+    background: var(--brown-900);
+    border-color: var(--brown-900);
+    color: white;
+}
+
+:root[data-theme="dark"] .pay-method input:checked + span {
+    background: var(--brown-700);
+    border-color: var(--brown-700);
+}
+
+.pay-method input:focus-visible + span {
+    outline: 3px solid var(--brown-500);
+    outline-offset: 2px;
+}
+
+.cash-fields {
+    margin-top: 12px;
+}
+
+/* Export pop-up on the Sales page (reuses the .pay-method buttons) */
+#exportForm legend {
+    float: none;
+    width: auto;
+    margin-bottom: 6px;
+    font-size: 1rem;   /* Bootstrap makes legends 1.5rem */
+}
+
+#exportCustom[hidden],
+#exportFilterRow[hidden] {
+    display: none;
+}
+
+.export-hint {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.export-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--completed-bg);
+    color: var(--completed-fg);
+    font-size: 14px;
+}
+
+.export-preview .bi {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.export-preview.is-empty {
+    background: var(--cream-100);
+    color: var(--text-muted);
+}
+
+.cash-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.cash-quick .chip {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.cash-change {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--completed-fg);
+}
+
+.cash-change:empty {
+    display: none;
+}
+
+.cash-change strong {
+    font-size: 18px;
+}
+
+.cash-short {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.refund-note {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--pending-bg);
+    color: var(--pending-fg);
+    font-size: 13px;
+}
+
+/* Order + sales tables */
+.pay-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.pay-tag.muted {
+    font-style: italic;
+}
+
+/* Sales report: money taken per method */
+.pay-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.pay-breakdown-item {
+    padding: 14px;
+    border: 1px solid var(--brown-200);
+    border-radius: var(--radius-sm);
+}
+
+.pay-breakdown-item .label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.pay-breakdown-item .amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--heading);
+    margin: 4px 0 8px;
+}
+
+.pay-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--cream-100);
+    overflow: hidden;
+}
+
+.pay-bar span {
+    display: block;
+    height: 100%;
+    background: var(--brown-500);
+}
+
+
+/* ======================================
+   17. PHONES
+   Staff sometimes use their own phone in the browser.
+   - Tables marked .table-stack turn into one card per row
+     (each cell shows its column name from data-label)
+   - Dish picker becomes compact rows so the cart is closer
+   - Bigger tap targets, 16px inputs (stops iPhone zooming in)
+   ====================================== */
+
+@media (max-width: 768px) {
+
+    /* iPhone Safari zooms the page when a field under 16px is tapped */
+    body .form-control,
+    body .form-select,
+    body .filter-control {
+        font-size: 16px;
+    }
+
+    /* The sidebar fills the visible screen, even with the browser bar showing */
+    .sidebar {
+        height: 100dvh;
+    }
+}
+
+@media (max-width: 576px) {
+
+    /* ---------- Stacked tables ---------- */
+    .table-stack thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .table-stack,
+    .table-stack tbody,
+    .table-stack tr,
+    .table-stack td {
+        display: block;
+        width: 100%;
+    }
+
+    .table-stack tbody tr {
+        border: 1px solid var(--brown-200);
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        background: var(--white);
+    }
+
+    .table-stack tbody td,
+    .table tbody .table-stack td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0 !important;
+        border: none;
+        border-bottom: 1px dashed var(--brown-200);
+        text-align: right;
+        white-space: normal;
+        background: transparent;
+    }
+
+    .table-stack tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .table-stack tbody td[data-label]::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-align: left;
+    }
+
+    /* Rows like "no orders yet" stay one plain box */
+    .table-stack tbody td[colspan] {
+        display: block;
+        text-align: center;
+    }
+
+    .table-stack tbody tr:has(td[colspan]) {
+        border: none;
+        padding: 0;
+    }
+
+    /* Food list and action buttons get the whole width */
+    .table-stack td.td-wide {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .table-stack td.td-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .table-stack td.td-actions::before {
+        display: none;
+    }
+
+    .table-stack td.td-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .table-stack .status-select {
+        width: auto;
+    }
+
+    .table-responsive:has(.table-stack) {
+        overflow: visible;
+    }
+
+    /* ---------- Dish picker: compact rows, 2 per line ---------- */
+    .pos-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .pos-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        min-height: 64px;
+        text-align: left;
+    }
+
+    .pos-item img {
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        border-radius: 8px;
+    }
+
+    .pos-item-info {
+        padding: 0;
+        min-width: 0;
+    }
+
+    .pos-item-name {
+        font-size: 12px;
+        min-height: 0;
+        line-height: 1.25;
+    }
+
+    .pos-item-price {
+        font-size: 12px;
+    }
+
+    .pos-qty-badge {
+        top: 4px;
+        left: 4px;
+        right: auto;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        font-size: 12px;
+    }
+
+    .pos-item .sold-out-badge {
+        top: auto;
+        bottom: 4px;
+        left: 4px;
+        transform: none;
+        font-size: 12px;
+        padding: 1px 6px;
+    }
+
+    /* ---------- Bigger tap targets ---------- */
+    .btn-sm {
+        min-height: 44px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .qty-stepper button {
+        width: 44px;
+        height: 44px;
+    }
+
+    .chip {
+        padding: 9px 14px;
+        min-height: 44px;
+    }
+
+    /* Menu cards: Edit + Delete share the card width */
+    .menu-info .d-flex > div:has(.edit-btn) {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+    }
+
+    body .menu-info .edit-btn,
+    body .menu-info .delete-btn {
+        flex: 1;
+        font-size: 13px;
+    }
+
+    /* ---------- Summary cards: two side by side ---------- */
+    body .summary-card {
+        padding: 16px;
+    }
+
+    body .summary-card h3 {
+        font-size: 21px;
+        overflow-wrap: anywhere;
+    }
+
+    body .summary-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 17px;
+        margin-bottom: 10px;
+    }
+
+    /* Search + filter on the sales report: full width */
+    body .filter-control {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}
+
+
+/* ======================================
+   18. READABLE TEXT AND TAP TARGETS
+   Every text colour here meets WCAG AA (4.5:1).
+   ====================================== */
+
+/* Bootstrap's grey (#6c757d) is too light on our cream background */
+:root {
+    --bs-secondary-color: var(--text-muted);
+}
+
+body .text-secondary,
+body .text-muted {
+    color: var(--text-muted) !important;
+}
+
+body .btn-outline-secondary {
+    --bs-btn-color: var(--text-muted);
+}
+
+/* Bootstrap's red is too dark on dark cards */
+:root[data-theme="dark"] .btn-outline-danger {
+    --bs-btn-color: #ee8b8b;
+    --bs-btn-border-color: #ee8b8b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--danger);
+    --bs-btn-hover-border-color: var(--danger);
+    --bs-btn-active-bg: var(--danger);
+    --bs-btn-active-border-color: var(--danger);
+}
+
+/* Phones: every control is at least 44px tall (Apple / Material guidance) */
+@media (max-width: 576px) {
+
+    body .btn,
+    body .status-select,
+    body .form-select,
+    body .form-control,
+    body .link-btn {
+        min-height: 44px;
+    }
+}
+
+/* Count on the selected chip: full white on brown */
+.chip.active .chip-count {
+    opacity: 1;
+}
+
+/* Role under the user's name (dashboard header) */
+.profile-role {
+    font-size: 12px;
 }
