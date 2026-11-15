@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,9 +43,12 @@
             box-shadow: 0 8px 20px rgba(92,64,51,0.12);
         }
 
-        .summary-card h6 {
+        .summary-card .card-label {
             color: var(--text-muted);
             font-size: 13px;
+            margin: 0 0 .5rem;
+            font-weight: 500;
+            line-height: 1.2;
         }
 
         .summary-card h3 {
@@ -107,7 +109,7 @@
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             display: inline-block;
         }
@@ -157,6 +159,7 @@
         <a href="dashboard.html"><i class="bi bi-house-door" aria-hidden="true"></i> Dashboard</a>
         <a href="menu.html"><i class="bi bi-journal-text" aria-hidden="true"></i> Menu Management</a>
         <a href="orders.html"><i class="bi bi-receipt" aria-hidden="true"></i> Order Management</a>
+        <a href="kitchen.html"><i class="bi bi-fire" aria-hidden="true"></i> Kitchen Display</a>
         <a href="sales.html" class="active" aria-current="page"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Sales Report</a>
 
         <div class="nav-label">ACCOUNT</div>
@@ -202,37 +205,37 @@
             <!-- SUMMARY CARDS -->
             <div class="row g-3 mt-3">
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-xl-3">
                     <div class="summary-card">
                         <div class="summary-icon icon-brown"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
-                        <h6>Total Sales</h6>
+                        <p class="card-label">Total Sales</p>
                         <h3 id="totalSales">RM 0.00</h3>
                         <small class="text-muted">Completed orders only</small>
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-xl-3">
                     <div class="summary-card">
                         <div class="summary-icon icon-blue"><i class="bi bi-receipt" aria-hidden="true"></i></div>
-                        <h6>Total Orders</h6>
+                        <p class="card-label">Total Orders</p>
                         <h3 id="salesTotalOrders">0</h3>
                         <small class="text-muted">All recorded orders</small>
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-xl-3">
                     <div class="summary-card">
                         <div class="summary-icon icon-green"><i class="bi bi-check2-circle" aria-hidden="true"></i></div>
-                        <h6>Completed Orders</h6>
+                        <p class="card-label">Completed Orders</p>
                         <h3 id="salesCompletedOrders">0</h3>
                         <small class="text-muted">Successfully completed</small>
                     </div>
                 </div>
 
-                <div class="col-md-6 col-xl-3">
+                <div class="col-6 col-xl-3">
                     <div class="summary-card">
                         <div class="summary-icon icon-orange"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
-                        <h6>Average Sales</h6>
+                        <p class="card-label">Average Sales</p>
                         <h3 id="averageSales">RM 0.00</h3>
                         <small class="text-muted">Per completed order</small>
                     </div>
@@ -267,13 +270,26 @@
 
                         <h5 class="mb-1">Order Status Overview</h5>
                         <p class="text-muted small">
-                            Distribution of all recorded orders.
+                            Orders by status for the chosen month.
                         </p>
 
                         <div id="orderStatusChart"></div>
 
                     </div>
                 </div>
+
+            </div>
+
+
+            <!-- PAYMENT METHODS (filled by JavaScript) -->
+            <div class="report-box">
+
+                <h5 class="mb-1">Payment Methods</h5>
+                <p class="text-muted small">
+                    Money taken from completed orders, by how customers paid. Refunds are taken off.
+                </p>
+
+                <div class="pay-breakdown" id="paymentBreakdown"></div>
 
             </div>
 
@@ -312,7 +328,7 @@
 
                 <div class="table-responsive">
 
-                    <table class="table table-hover">
+                    <table class="table table-hover table-stack">
 
                         <thead>
                             <tr>
@@ -320,6 +336,7 @@
                                 <th>Customer</th>
                                 <th>Date</th>
                                 <th>Total Amount</th>
+                                <th>Payment</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -376,22 +393,27 @@
     // SUMMARY CARDS
     // ======================================
 
+    // Past days (salesHistory in js/data.js) were all completed and paid
+    const past = historyTotals();
+
     const totalSalesAmount = completedSales.reduce(function(total, order) {
         return total + Number(order.total || 0);
-    }, 0);
+    }, 0) + past.total;
 
-    const averageSalesAmount = completedSales.length > 0
-        ? totalSalesAmount / completedSales.length
+    const completedCount = completedSales.length + past.orders;
+
+    const averageSalesAmount = completedCount > 0
+        ? totalSalesAmount / completedCount
         : 0;
 
     document.getElementById("totalSales").textContent =
         formatRM(totalSalesAmount);
 
     document.getElementById("salesTotalOrders").textContent =
-        salesOrders.length;
+        (salesOrders.length + past.orders).toLocaleString("en-MY");
 
     document.getElementById("salesCompletedOrders").textContent =
-        completedSales.length;
+        completedCount.toLocaleString("en-MY");
 
     document.getElementById("averageSales").textContent =
         formatRM(averageSalesAmount);
@@ -445,7 +467,7 @@
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) { return "RM " + value; }
+                        callback: function(value) { return "RM " + value.toLocaleString("en-MY"); }
                     }
                 }
             }
@@ -459,6 +481,87 @@
 
     renderStatusDonut("orderStatusChart", salesOrders);
 
+
+
+    // ======================================
+    // PAYMENT METHODS
+    // ======================================
+
+    (function renderPaymentBreakdown() {
+
+        // Net amount per method (refunds are negative payments)
+        const byMethod = {};
+        const orderCount = {};
+
+        PAYMENT_METHODS.forEach(function(method) {
+            byMethod[method.id] = 0;
+            orderCount[method.id] = 0;
+        });
+
+        let notRecorded = 0;
+
+        completedSales.forEach(function(order) {
+
+            if (!Array.isArray(order.payments)) {
+                notRecorded += Number(order.total || 0);
+                return;
+            }
+
+            const counted = [];
+
+            order.payments.forEach(function(payment) {
+
+                const id = payment.method in byMethod ? payment.method : "Unknown";
+
+                if (id === "Unknown") {
+                    notRecorded += Number(payment.amount || 0);
+                    return;
+                }
+
+                byMethod[id] += Number(payment.amount || 0);
+
+                if (payment.amount > 0 && !counted.includes(id)) {
+                    counted.push(id);
+                    orderCount[id] += 1;
+                }
+            });
+        });
+
+        // Add the past days: payments = { Cash: [amount, orders], ... }
+        Object.keys(past.payments).forEach(function(id) {
+            if (!(id in byMethod)) return;
+            byMethod[id] += past.payments[id][0];
+            orderCount[id] += past.payments[id][1];
+        });
+
+        const rows = PAYMENT_METHODS.map(function(method) {
+            return { info: method, amount: roundRM(byMethod[method.id]), orders: orderCount[method.id] };
+        });
+
+        if (notRecorded > 0) {
+            rows.push({ info: paymentMethodInfo("Unknown"), amount: roundRM(notRecorded), orders: null });
+        }
+
+        const grand = rows.reduce(function(sum, row) { return sum + row.amount; }, 0);
+
+        document.getElementById("paymentBreakdown").innerHTML = rows.map(function(row) {
+
+            const share = grand > 0 ? Math.round(row.amount / grand * 100) : 0;
+
+            return `
+                <div class="pay-breakdown-item">
+                    <div class="label">
+                        <i class="bi bi-${row.info.icon}" aria-hidden="true"></i> ${escapeHTML(row.info.label)}
+                    </div>
+                    <div class="amount">${formatRM(row.amount)}</div>
+                    <div class="pay-bar" role="img" aria-label="${share}% of sales"><span style="width: ${share}%"></span></div>
+                    <small class="text-muted">
+                        ${share}% of sales${row.orders !== null ? ` · ${row.orders.toLocaleString("en-MY")} ${row.orders === 1 ? "order" : "orders"}` : ""}
+                    </small>
+                </div>
+            `;
+        }).join("");
+    })();
 
 
     // ======================================
@@ -522,7 +625,7 @@
 
             salesTable.innerHTML = `
                 <tr>
-                    <td colspan="5">${emptyBox}</td>
+                    <td colspan="6">${emptyBox}</td>
                 </tr>
             `;
 
@@ -538,17 +641,19 @@
                 salesTable.innerHTML += `
                     <tr>
 
-                        <td><strong>${orderID}</strong></td>
+                        <td data-label="Order ID"><strong>${orderID}</strong></td>
 
-                        <td>${escapeHTML(order.customer || "Unknown")}</td>
+                        <td data-label="Customer">${escapeHTML(order.customer || "Unknown")}</td>
 
-                        <td>${order.date || "-"}</td>
+                        <td data-label="Date">${order.date || "-"}</td>
 
-                        <td>
+                        <td data-label="Total Amount">
                             <strong>${formatRM(amount)}</strong>
                         </td>
 
-                        <td>
+                        <td data-label="Payment">${paymentTagHTML(order)}</td>
+
+                        <td data-label="Status">
                             <span class="status-badge ${getStatusClass(order.status)}">
                                 ${order.status}
                             </span>
@@ -579,57 +684,438 @@
     // EXPORT SALES TO CSV
     // ======================================
 
-    window.exportSalesCSV = function() {
+    // Three reports, each for a chosen period, each ending in a TOTAL row:
+    //   Transactions  - one row per order (orders on this device only;
+    //                   older days are kept as daily totals, not orders)
+    //   Daily summary - one row per day, history included
+    //   Best sellers  - dishes by quantity sold, history included
+    // Only Completed orders count as sales, the same as the cards above.
 
-        if (salesOrders.length === 0) {
-            showToast("No sales transactions available to export.", "info");
-            return;
+    const REPORTS = {
+        transactions: { label: "Transactions",  icon: "receipt",       file: "Transactions",
+            hint: "One row per order, with dishes and payments. Older days are only kept as daily totals, so use Daily summary for the full history." },
+        daily:        { label: "Daily summary", icon: "calendar3",     file: "Daily-Sales",
+            hint: "One row per day: orders, Cash, Card and QR totals. Completed orders only." },
+        items:        { label: "Best sellers",  icon: "trophy",        file: "Best-Sellers",
+            hint: "Each dish with quantity sold and revenue, best first. Completed orders only." }
+    };
+
+    const PERIODS = {
+        month:  { label: "This month",    icon: "calendar-event" },
+        six:    { label: "Last 6 months", icon: "calendar-range" },
+        custom: { label: "Custom",        icon: "sliders" }
+    };
+
+    // Date helpers. Orders and history store "dd/mm/yyyy";
+    // the file uses yyyy-mm-dd so Excel never swaps day and month.
+    function isoDate(date) {
+        return date.getFullYear() + "-" +
+            String(date.getMonth() + 1).padStart(2, "0") + "-" +
+            String(date.getDate()).padStart(2, "0");
+    }
+
+    function fromIso(value) {
+        const parts = String(value).split("-");
+        return parts.length === 3 ? new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])) : null;
+    }
+
+    function periodRange(period, customFrom, customTo) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (period === "month") return { from: new Date(today.getFullYear(), today.getMonth(), 1), to: today };
+        if (period === "six")   return { from: new Date(today.getFullYear(), today.getMonth() - 5, 1), to: today };
+        return { from: fromIso(customFrom), to: fromIso(customTo) };
+    }
+
+    function inRange(dateString, range) {
+        const date = parseOrderDate(dateString);
+        return !!date && date >= range.from && date <= range.to;
+    }
+
+    function orderCode(order) {
+        return "ORD" + String(order.id).padStart(3, "0");
+    }
+
+    // Cash / Card / QR amounts paid for one order (refunds taken off)
+    function paidByMethod(order) {
+        const paid = { Cash: 0, Card: 0, QR: 0, Other: 0 };
+        if (!Array.isArray(order.payments)) {
+            paid.Other = Number(order.total || 0);   // saved before payments existed
+            return paid;
         }
+        order.payments.forEach(function(payment) {
+            const key = paid[payment.method] !== undefined ? payment.method : "Other";
+            paid[key] += Number(payment.amount || 0);
+        });
+        return paid;
+    }
 
-        let csvContent =
-            "Order ID,Customer,Date,Total Amount,Status\n";
+    // Same search + status the table is showing
+    function matchesTableFilter(order) {
+        const search = salesSearch.value.toLowerCase();
+        const status = statusFilter.value;
+        const text = (orderCode(order) + " " + String(order.customer || "")).toLowerCase();
+        return text.includes(search) && (status === "All" || order.status === status);
+    }
 
-        salesOrders.forEach(function(order) {
+    function tableFilterActive() {
+        return salesSearch.value.trim() !== "" || statusFilter.value !== "All";
+    }
 
-            const orderID =
-                "ORD" + String(order.id).padStart(3, "0");
+    const money = function(amount) { return roundRM(amount).toFixed(2); };
 
-            const customer =
-                String(order.customer || "").replace(/"/g, '""');
 
-            const date = order.date || "-";
+    // Each builder returns { header, rows, total, count, note }
+    function buildTransactions(range, useFilter) {
 
-            const amount = Number(order.total || 0).toFixed(2);
-
-            const status = order.status || "-";
-
-            csvContent +=
-                `"${orderID}","${customer}","${date}","${amount}","${status}"\n`;
-
+        const list = salesOrders.filter(function(order) {
+            return inRange(order.date, range) && (!useFilter || matchesTableFilter(order));
+        }).sort(function(a, b) {
+            return (a.createdAt || 0) - (b.createdAt || 0) || a.id - b.id;
         });
 
+        const sum = { total: 0, Cash: 0, Card: 0, QR: 0, Other: 0, completed: 0, completedCount: 0 };
 
-        const blob = new Blob(
-            ["\uFEFF" + csvContent],
-            { type: "text/csv;charset=utf-8;" }
-        );
+        const rows = list.map(function(order) {
+            const paid = paidByMethod(order);
+            const total = Number(order.total || 0);
+            const time = order.createdAt
+                ? new Date(order.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+                : "";
 
+            sum.total += total;
+            ["Cash", "Card", "QR", "Other"].forEach(function(key) { sum[key] += paid[key]; });
+            if (order.status === "Completed") {
+                sum.completed += total;
+                sum.completedCount += 1;
+            }
+
+            return [
+                orderCode(order),
+                isoDate(parseOrderDate(order.date)),
+                time,
+                order.customer || "",
+                (order.items || []).map(function(item) { return item.quantity + "x " + item.name; }).join("; "),
+                order.status || "",
+                money(total), money(paid.Cash), money(paid.Card), money(paid.QR), money(paid.Other)
+            ];
+        });
+
+        const footer = [
+            ["TOTAL (" + rows.length + " orders)", "", "", "", "", "",
+                money(sum.total), money(sum.Cash), money(sum.Card), money(sum.QR), money(sum.Other)]
+        ];
+
+        if (sum.completedCount !== rows.length) {
+            footer.push(["SALES (" + sum.completedCount + " completed)", "", "", "", "", "Completed",
+                money(sum.completed), "", "", "", ""]);
+        }
+
+        return {
+            header: ["Order ID", "Date", "Time", "Customer", "Items", "Status",
+                "Total (RM)", "Cash (RM)", "Card (RM)", "QR / e-wallet (RM)", "Not recorded (RM)"],
+            rows: rows,
+            footer: footer,
+            count: rows.length,
+            total: sum.completed,
+            noun: "orders"
+        };
+    }
+
+    function buildDaily(range) {
+
+        const days = {};   // iso date -> totals
+
+        function dayFor(dateString) {
+            const iso = isoDate(parseOrderDate(dateString));
+            return days[iso] || (days[iso] = { orders: 0, Cash: 0, Card: 0, QR: 0, Other: 0, total: 0 });
+        }
+
+        salesHistory.forEach(function(day) {
+            if (!inRange(day.date, range)) return;
+            const row = dayFor(day.date);
+            row.orders += day.orders;
+            row.total += day.total;
+            Object.keys(day.payments || {}).forEach(function(method) {
+                const key = row[method] !== undefined ? method : "Other";
+                row[key] += day.payments[method][0];
+            });
+        });
+
+        completedSales.forEach(function(order) {
+            if (!inRange(order.date, range)) return;
+            const row = dayFor(order.date);
+            const paid = paidByMethod(order);
+            row.orders += 1;
+            row.total += Number(order.total || 0);
+            ["Cash", "Card", "QR", "Other"].forEach(function(key) { row[key] += paid[key]; });
+        });
+
+        const sum = { orders: 0, Cash: 0, Card: 0, QR: 0, Other: 0, total: 0 };
+
+        const rows = Object.keys(days).sort().map(function(iso) {
+            const row = days[iso];
+            Object.keys(sum).forEach(function(key) { sum[key] += row[key]; });
+            const weekday = fromIso(iso).toLocaleDateString("en-GB", { weekday: "short" });
+            return [iso, weekday, row.orders, money(row.Cash), money(row.Card), money(row.QR), money(row.Other), money(row.total)];
+        });
+
+        return {
+            header: ["Date", "Day", "Orders", "Cash (RM)", "Card (RM)", "QR / e-wallet (RM)", "Not recorded (RM)", "Total (RM)"],
+            rows: rows,
+            footer: [["TOTAL (" + rows.length + " days)", "", sum.orders,
+                money(sum.Cash), money(sum.Card), money(sum.QR), money(sum.Other), money(sum.total)]],
+            count: rows.length,
+            total: sum.total,
+            noun: "days"
+        };
+    }
+
+    function buildItems(range) {
+
+        const dishes = {};   // name -> { quantity, revenue, priced }
+
+        function dishFor(name) {
+            return dishes[name] || (dishes[name] = { quantity: 0, revenue: 0, unpriced: 0 });
+        }
+
+        // History only keeps quantities, so price them from the menu
+        salesHistory.forEach(function(day) {
+            if (!inRange(day.date, range)) return;
+            Object.keys(day.items || {}).forEach(function(name) {
+                const dish = dishFor(name);
+                const menu = menuItems.find(function(item) { return item.name === name; });
+                dish.quantity += day.items[name];
+                if (menu) dish.revenue += Number(menu.price) * day.items[name];
+                else dish.unpriced += day.items[name];
+            });
+        });
+
+        completedSales.forEach(function(order) {
+            if (!inRange(order.date, range)) return;
+            (order.items || []).forEach(function(item) {
+                const dish = dishFor(item.name);
+                dish.quantity += Number(item.quantity || 0);
+                dish.revenue += Number(item.price || 0) * Number(item.quantity || 0);
+            });
+        });
+
+        const names = Object.keys(dishes).sort(function(a, b) {
+            return dishes[b].quantity - dishes[a].quantity || a.localeCompare(b);
+        });
+
+        const totalQty = names.reduce(function(sum, name) { return sum + dishes[name].quantity; }, 0);
+        const totalRevenue = names.reduce(function(sum, name) { return sum + dishes[name].revenue; }, 0);
+        const anyUnpriced = names.some(function(name) { return dishes[name].unpriced > 0; });
+
+        const rows = names.map(function(name, index) {
+            const dish = dishes[name];
+            const menu = menuItems.find(function(item) { return item.name === name; });
+            return [
+                index + 1,
+                name,
+                menu ? menu.category : "No longer on menu",
+                dish.quantity,
+                totalQty ? (dish.quantity / totalQty * 100).toFixed(1) + "%" : "",
+                money(dish.revenue) + (dish.unpriced ? "*" : "")
+            ];
+        });
+
+        const footer = [["", "TOTAL (" + rows.length + " dishes)", "", totalQty, "100%", money(totalRevenue)]];
+
+        if (anyUnpriced) {
+            footer.push(["", "* Some past sales of this dish could not be priced because it is no longer on the menu.", "", "", "", ""]);
+        }
+
+        return {
+            header: ["Rank", "Dish", "Category", "Quantity sold", "Share of dishes", "Revenue (RM)"],
+            rows: rows,
+            footer: footer,
+            count: rows.length,
+            total: totalRevenue,
+            noun: "dishes"
+        };
+    }
+
+
+    // One CSV cell. Text that starts with = + - @ would run as a
+    // formula in Excel, so it gets a leading apostrophe.
+    function csvCell(value) {
+        if (typeof value === "number") return String(value);
+        let text = String(value === undefined || value === null ? "" : value);
+        if (/^[=+\-@\t\r]/.test(text) && !/^-?\d+(\.\d+)?$/.test(text)) text = "'" + text;
+        if (/^-?\d+(\.\d+)?%?$/.test(text)) return text;   // plain numbers stay numbers
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function downloadCSV(fileName, lines) {
+
+        const csv = lines.map(function(line) { return line.map(csvCell).join(","); }).join("\r\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
-
         const link = document.createElement("a");
 
         link.href = url;
-
-        link.download = "Ruang-Rasa-Sales-Report.csv";
-
+        link.download = fileName;
         document.body.appendChild(link);
-
         link.click();
-
         document.body.removeChild(link);
 
-        URL.revokeObjectURL(url);
+        // Some browsers start the download after click() returns
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    }
 
+
+    function optionGroup(name, options, checked) {
+        return Object.keys(options).map(function(key) {
+            return `
+                <label class="pay-method">
+                    <input type="radio" name="${name}" value="${key}" ${key === checked ? "checked" : ""}>
+                    <span><i class="bi bi-${options[key].icon}" aria-hidden="true"></i> ${options[key].label}</span>
+                </label>
+            `;
+        }).join("");
+    }
+
+    window.exportSalesCSV = function() {
+
+        const today = new Date();
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const filterOn = tableFilterActive();
+
+        const modal = openModal(`
+            <form id="exportForm" novalidate>
+
+                <div class="rr-modal-header">
+                    <div class="rr-modal-icon"><i class="bi bi-download" aria-hidden="true"></i></div>
+                    <div>
+                        <h5>Export sales report</h5>
+                        <p>Choose what to export. The file opens in Excel or Google Sheets.</p>
+                    </div>
+                </div>
+
+                <div class="rr-modal-body">
+
+                    <fieldset class="mb-3">
+                        <legend class="form-label">Report</legend>
+                        <div class="pay-methods">${optionGroup("exportType", REPORTS, "daily")}</div>
+                        <p class="export-hint" id="exportHint"></p>
+                    </fieldset>
+
+                    <fieldset class="mb-3">
+                        <legend class="form-label">Period</legend>
+                        <div class="pay-methods">${optionGroup("exportPeriod", PERIODS, "month")}</div>
+
+                        <div class="row g-2 mt-1" id="exportCustom" hidden>
+                            <div class="col-6">
+                                <label class="form-label small" for="exportFrom">From</label>
+                                <input type="date" id="exportFrom" class="form-control" value="${isoDate(monthStart)}" max="${isoDate(today)}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small" for="exportTo">To</label>
+                                <input type="date" id="exportTo" class="form-control" value="${isoDate(today)}" max="${isoDate(today)}">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="form-check mb-3" id="exportFilterRow" ${filterOn ? "" : "hidden"}>
+                        <input class="form-check-input" type="checkbox" id="exportUseFilter" checked>
+                        <label class="form-check-label" for="exportUseFilter">
+                            Only orders matching the table's search and status filter
+                        </label>
+                    </div>
+
+                    <div class="export-preview" id="exportPreview" aria-live="polite"></div>
+
+                </div>
+
+                <div class="rr-modal-footer">
+                    <button type="button" class="btn-ghost" data-close>Cancel</button>
+                    <button type="submit" class="btn btn-brand" id="exportGo">
+                        <i class="bi bi-download" aria-hidden="true"></i> Download CSV
+                    </button>
+                </div>
+
+            </form>
+        `, { wide: true });
+
+        const form = modal.element.querySelector("#exportForm");
+        const hint = form.querySelector("#exportHint");
+        const customBox = form.querySelector("#exportCustom");
+        const fromInput = form.querySelector("#exportFrom");
+        const toInput = form.querySelector("#exportTo");
+        const filterRow = form.querySelector("#exportFilterRow");
+        const useFilter = form.querySelector("#exportUseFilter");
+        const preview = form.querySelector("#exportPreview");
+        const goButton = form.querySelector("#exportGo");
+
+        function current() {
+            const type = form.querySelector("input[name=exportType]:checked").value;
+            const period = form.querySelector("input[name=exportPeriod]:checked").value;
+            const range = periodRange(period, fromInput.value, toInput.value);
+            return { type: type, period: period, range: range };
+        }
+
+        function build(choice) {
+            if (choice.type === "transactions") return buildTransactions(choice.range, filterOn && useFilter.checked);
+            if (choice.type === "daily") return buildDaily(choice.range);
+            return buildItems(choice.range);
+        }
+
+        // Update the hint and the "what you'll get" line on every change
+        function refresh() {
+
+            const choice = current();
+
+            hint.textContent = REPORTS[choice.type].hint;
+            customBox.hidden = choice.period !== "custom";
+            filterRow.hidden = !(filterOn && choice.type === "transactions");
+
+            if (!choice.range.from || !choice.range.to || choice.range.from > choice.range.to) {
+                preview.innerHTML = `<i class="bi bi-exclamation-circle" aria-hidden="true"></i> Pick a start date on or before the end date.`;
+                preview.classList.add("is-empty");
+                goButton.disabled = true;
+                return;
+            }
+
+            const report = build(choice);
+
+            preview.classList.toggle("is-empty", report.count === 0);
+            goButton.disabled = report.count === 0;
+            preview.innerHTML = report.count === 0
+                ? `<i class="bi bi-info-circle" aria-hidden="true"></i> Nothing to export for this period.`
+                : `<i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i>
+                   <span><strong>${report.count.toLocaleString("en-MY")} ${report.noun}</strong>
+                   \u00B7 completed sales ${formatRM(report.total)}</span>`;
+        }
+
+        form.addEventListener("change", refresh);
+        form.addEventListener("input", refresh);
+        refresh();
+
+        form.addEventListener("submit", function(event) {
+
+            event.preventDefault();
+
+            const choice = current();
+            if (goButton.disabled) return;
+
+            const report = build(choice);
+            const fileName = "Ruang-Rasa-" + REPORTS[choice.type].file + "_" +
+                isoDate(choice.range.from) + "_to_" + isoDate(choice.range.to) + ".csv";
+
+            const titleLines = [
+                ["Ruang Rasa Cafe - " + REPORTS[choice.type].label],
+                ["Period: " + isoDate(choice.range.from) + " to " + isoDate(choice.range.to)],
+                ["Exported: " + new Date().toLocaleString("en-GB")],
+                []
+            ];
+
+            downloadCSV(fileName, titleLines.concat([report.header], report.rows, [[]], report.footer));
+
+            modal.close();
+            showToast("Exported " + report.count.toLocaleString("en-MY") + " " + report.noun + " to " + fileName, "success");
+        });
     };
 
 })();

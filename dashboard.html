@@ -41,7 +41,7 @@
 
         .date-label {
             font-size: 12px;
-            color: #8c7d72;
+            color: var(--text-muted);
         }
 
         .admin-profile {
@@ -97,7 +97,7 @@
             background: rgba(255,255,255,.17);
             padding: 7px 13px;
             border-radius: 30px;
-            font-size: 11px;
+            font-size: 12px;
             margin-bottom: 13px;
         }
 
@@ -133,10 +133,13 @@
             font-size: 21px;
         }
 
-        .summary-card h6 {
-            color: #8c7d72;
+        .summary-card .card-label {
+            color: var(--text-muted);
             font-size: 12px;
             margin-top: 15px;
+            margin-bottom: .5rem;
+            font-weight: 500;
+            line-height: 1.2;
         }
 
         .summary-card h3 {
@@ -148,7 +151,7 @@
 
         .summary-card small {
             color: var(--text-muted);
-            font-size: 11px;
+            font-size: 12px;
         }
 
         /* SECTION CARDS */
@@ -175,7 +178,7 @@
         }
 
         .section-subtitle {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-muted);
             margin-top: 5px;
         }
@@ -209,24 +212,24 @@
         .status {
             padding: 6px 10px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             display: inline-block;
             font-weight: 600;
         }
 
         .pending {
-            background: #fff0d6;
-            color: #a46b16;
+            background: var(--pending-bg);
+            color: var(--pending-fg);
         }
 
         .preparing {
-            background: #e7edff;
-            color: #4864ad;
+            background: var(--preparing-bg);
+            color: var(--preparing-fg);
         }
 
         .completed {
-            background: #e2f4e8;
-            color: #378052;
+            background: var(--completed-bg);
+            color: var(--completed-fg);
         }
 
         .empty-message {
@@ -236,9 +239,13 @@
         }
 
         .view-link {
-            color: #987052;
+            color: var(--accent-text);
             text-decoration: none;
-            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 0 4px;
+            font-size: 12px;
             font-weight: 600;
         }
 
@@ -249,7 +256,7 @@
         .footer {
             text-align: center;
             color: var(--text-muted);
-            font-size: 11px;
+            font-size: 12px;
             margin-top: 30px;
         }
 
@@ -308,6 +315,7 @@
         <a href="dashboard.html" class="active" aria-current="page"><i class="bi bi-house-door" aria-hidden="true"></i> Dashboard</a>
         <a href="menu.html"><i class="bi bi-journal-text" aria-hidden="true"></i> Menu Management</a>
         <a href="orders.html"><i class="bi bi-receipt" aria-hidden="true"></i> Order Management</a>
+        <a href="kitchen.html"><i class="bi bi-fire" aria-hidden="true"></i> Kitchen Display</a>
         <a href="sales.html"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Sales Report</a>
 
         <div class="nav-label">ACCOUNT</div>
@@ -349,7 +357,7 @@
                 <div class="profile-icon" data-user-initial>A</div>
                 <div>
                     <div data-username>Admin</div>
-                    <small class="text-muted fw-normal" data-user-role>Administrator</small>
+                    <small class="text-muted fw-normal profile-role" data-user-role>Administrator</small>
                 </div>
             </div>
 
@@ -383,7 +391,7 @@
                         <span class="corner-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></span>
                     </div>
 
-                    <h6>Total Sales</h6>
+                    <p class="card-label">Total Sales</p>
                     <h3 id="dashboardSales">RM 0.00</h3>
                     <small>Revenue from completed orders</small>
 
@@ -398,7 +406,7 @@
                         <span class="corner-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span>
                     </div>
 
-                    <h6>Total Orders</h6>
+                    <p class="card-label">Total Orders</p>
                     <h3 id="dashboardOrders">0</h3>
                     <small>All customer orders</small>
 
@@ -413,7 +421,7 @@
                         <span class="corner-icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
                     </div>
 
-                    <h6>Menu Items</h6>
+                    <p class="card-label">Menu Items</p>
                     <h3 id="dashboardMenu">0</h3>
                     <small>Available menu items</small>
 
@@ -428,7 +436,7 @@
                         <span class="corner-icon"><i class="bi bi-bell" aria-hidden="true"></i></span>
                     </div>
 
-                    <h6>Pending Orders</h6>
+                    <p class="card-label">Pending Orders</p>
                     <h3 id="dashboardPending">0</h3>
                     <small>Orders waiting for preparation</small>
 
@@ -467,7 +475,7 @@
                         <div>
                             <h5 class="section-title">Order Status Overview</h5>
                             <div class="section-subtitle">
-                                Current order distribution
+                                Orders by status, month by month
                             </div>
                         </div>
                         <span class="corner-icon"><i class="bi bi-pie-chart" aria-hidden="true"></i></span>
@@ -518,7 +526,7 @@
                             </div>
                         </div>
 
-                        <a href="orders.html" class="view-link">
+                        <a href="orders.html#orderList" class="view-link">
                             View All Orders →
                         </a>
 
@@ -526,7 +534,7 @@
 
                     <div class="table-responsive">
 
-                        <table class="table table-hover">
+                        <table class="table table-hover table-stack">
 
                             <thead>
                                 <tr>
@@ -617,9 +625,12 @@ document.addEventListener("DOMContentLoaded", function() {
         order => order.status === "Completed"
     );
 
+    // Past days (salesHistory in js/data.js) count as completed sales too
+    const past = historyTotals();
+
     const totalSales = completedOrders.reduce(
         (total, order) => total + Number(order.total || 0), 0
-    );
+    ) + past.total;
 
     const pendingOrders = orders.filter(
         order => order.status === "Pending"
@@ -629,7 +640,7 @@ document.addEventListener("DOMContentLoaded", function() {
         formatRM(totalSales);
 
     document.getElementById("dashboardOrders").textContent =
-        orders.length;
+        (orders.length + past.orders).toLocaleString("en-MY");
 
     document.getElementById("dashboardMenu").textContent =
         menuItems.length;
@@ -684,7 +695,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) { return "RM " + value; }
+                        callback: function(value) { return "RM " + value.toLocaleString("en-MY"); }
                     }
                 }
             }
@@ -758,7 +769,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         title: { display: true, text: "Quantity Ordered", font: { size: 11 } }
                     },
                     y: {
-                        grid: { display: false }
+                        grid: { display: false },
+                        ticks: {
+                            // Phones: shorten long dish names so they aren't cut off
+                            // (the tooltip still shows the full name)
+                            callback: function(value) {
+                                const name = this.getLabelForValue(value);
+                                const max = window.innerWidth < 576 ? 12 : 24;
+                                return name.length > max ? name.slice(0, max - 1) + "…" : name;
+                            }
+                        }
                     }
                 }
             }
@@ -805,24 +825,30 @@ document.addEventListener("DOMContentLoaded", function() {
                     statusClass = "completed";
                 }
 
-                recentOrdersTable.innerHTML += `
-                    <tr>
+                const orderCode = "ORD" + String(order.id).padStart(3, "0");
 
-                        <td>
-                            <strong>
-                                ORD${String(order.id).padStart(3, "0")}
-                            </strong>
+                // The order ID is a real link (keyboard + screen readers);
+                // a click anywhere else on the row follows the same link
+                recentOrdersTable.innerHTML += `
+                    <tr class="row-link">
+
+                        <td data-label="Order ID">
+                            <a href="orders.html?order=${Number(order.id)}#orderList"
+                                class="row-link-anchor"
+                                aria-label="Open order ${orderCode}, ${escapeHTML(order.customer)}">
+                                ${orderCode}
+                            </a>
                         </td>
 
-                        <td>${escapeHTML(order.customer)}</td>
+                        <td data-label="Customer">${escapeHTML(order.customer)}</td>
 
-                        <td>${escapeHTML(order.date)}</td>
+                        <td data-label="Date">${escapeHTML(order.date)}</td>
 
-                        <td>
+                        <td data-label="Total" class="text-nowrap">
                             <strong>${formatRM(order.total)}</strong>
                         </td>
 
-                        <td>
+                        <td data-label="Status">
                             <span class="status ${statusClass}">
                                 ${order.status}
                             </span>
@@ -831,6 +857,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     </tr>
                 `;
 
+            });
+
+            recentOrdersTable.addEventListener("click", function(event) {
+                if (event.target.closest("a")) return;   // the link handles itself
+                const link = event.target.closest("tr") &&
+                    event.target.closest("tr").querySelector(".row-link-anchor");
+                if (link) window.location.href = link.href;
             });
 
         }
