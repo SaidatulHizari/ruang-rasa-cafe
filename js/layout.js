@@ -168,8 +168,7 @@ document.querySelectorAll("[data-reset-demo]").forEach(function(button) {
             if (!confirmed) return;
 
             try {
-                localStorage.removeItem("ruangRasaMenuItems");
-                localStorage.removeItem("ruangRasaOrders");
+                DEMO_DATA_KEYS.forEach(function(key) { localStorage.removeItem(key); });
                 sessionStorage.setItem("ruangRasaFlash", "Demo data has been reset.");
             } catch (error) {
                 showToast("Could not reset the data in this browser.", "error");

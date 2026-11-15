@@ -148,7 +148,11 @@ function escapeHTML(value) {
 
 // One money format everywhere: "RM 12.50"
 function formatRM(amount) {
-    return "RM " + (Number(amount) || 0).toFixed(2);
+    // 1234.5 -> "RM 1,234.50"
+    return "RM " + (Number(amount) || 0).toLocaleString("en-MY", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 // Friendly "nothing here yet" box with an optional next-step link
