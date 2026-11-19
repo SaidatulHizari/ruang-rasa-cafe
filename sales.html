@@ -77,6 +77,11 @@
         .report-box {
             margin-top: 25px;
         }
+        /* Boxes side by side in a row: full height minus the top margin,
+           so they don't spill into the box underneath */
+        .row > [class*="col"] > .report-box {
+            height: calc(100% - 25px);
+        }
 
         /* The transactions box sits directly in <main>; don't stretch it */
         .main-content > .report-box {
@@ -91,6 +96,27 @@
         .chart-container {
             position: relative;
             height: 300px;
+        }
+        /* Month in Detail */
+        .detail-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--heading);
+            margin: 22px 0 10px;
+        }
+        .chart-container.detail-daily {
+            height: 260px;
+        }
+        .chart-container.detail-small {
+            height: 240px;
+        }
+        .detail-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 8px 0 0;
+        }
+        #detailMonth {
+            width: auto;
         }
 
 
@@ -275,6 +301,41 @@
 
                         <div id="orderStatusChart"></div>
 
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- MONTH IN DETAIL: daily sales, category, weekday (filled by JavaScript) -->
+            <div class="report-box">
+
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <h5 class="mb-1">Month in Detail</h5>
+                        <p class="text-muted small mb-0" id="detailSummary">
+                            Day-by-day sales for the chosen month.
+                        </p>
+                    </div>
+                    <div>
+                        <label class="visually-hidden" for="detailMonth">Month</label>
+                        <select id="detailMonth" class="form-select form-select-sm"></select>
+                    </div>
+                </div>
+
+                <h6 class="detail-title">Daily Sales</h6>
+                <div class="chart-container detail-daily" id="dailyChart"></div>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <h6 class="detail-title">Sales by Category</h6>
+                        <div class="chart-container detail-small" id="categoryChart"></div>
+                        <p class="detail-note">Past days are priced at today's menu prices.</p>
+                    </div>
+                    <div class="col-lg-5">
+                        <h6 class="detail-title">Busiest Day of the Week</h6>
+                        <div class="chart-container detail-small" id="weekdayChart"></div>
+                        <p class="detail-note">Average sales on each weekday in the chosen month.</p>
                     </div>
                 </div>
 
@@ -480,6 +541,256 @@
     // ======================================
 
     renderStatusDonut("orderStatusChart", salesOrders);
+
+
+    // ======================================
+    // MONTH IN DETAIL (helpers in js/charts.js)
+    // One month picker drives three charts:
+    // daily sales (line), sales by category (bars), busiest weekday (bars)
+    // ======================================
+
+    (function renderMonthDetail() {
+
+        const picker = document.getElementById("detailMonth");
+        const summary = document.getElementById("detailSummary");
+        const today = new Date();
+        const months = [];
+        let charts = [];
+
+        for (let i = 0; i < 6; i++) {
+            const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push({
+                year: month.getFullYear(),
+                month: month.getMonth(),
+                label: month.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+            });
+        }
+
+        picker.innerHTML = months.map(function(m, index) {
+            return '<option value="' + index + '">' + m.label + "</option>";
+        }).join("");
+
+        function rmTick(value) { return shortRM(value); }
+
+        // Put a fresh canvas in a box, or a message when there is nothing to show
+        function prepare(id, label, isEmpty, emptyText) {
+            const box = document.getElementById(id);
+            if (isEmpty) {
+                box.innerHTML = emptyStateHTML("bar-chart", emptyText);
+                return null;
+            }
+            box.innerHTML = "";
+            const canvas = document.createElement("canvas");
+            canvas.setAttribute("role", "img");
+            canvas.setAttribute("aria-label", label);
+            box.appendChild(canvas);
+            return canvas;
+        }
+
+        function draw() {
+
+            charts.forEach(function(chart) { chart.destroy(); });
+            charts = [];
+
+            const chosen = months[Number(picker.value)];
+            const days = daysOfMonth(salesOrders, chosen.year, chosen.month);
+            const monthTotal = days.reduce(function(sum, day) { return sum + day.total; }, 0);
+            const isThisMonth = chosen.year === today.getFullYear() && chosen.month === today.getMonth();
+            const shortMonth = chosen.label.split(" ")[0];
+
+            // Summary line: total + best day
+            if (monthTotal > 0) {
+                const best = days.reduce(function(a, b) { return b.total > a.total ? b : a; });
+                summary.textContent = formatRM(monthTotal) + " in " + chosen.label +
+                    (isThisMonth ? " so far" : "") + " · best day " +
+                    best.date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) +
+                    " (" + formatRM(best.total) + ")";
+            } else {
+                summary.textContent = "No sales in " + chosen.label + ".";
+            }
+
+
+            // ---- 1. Daily sales (line) ----
+            const dailyCanvas = prepare(
+                "dailyChart",
+                "Daily sales in " + chosen.label + ", total " + formatRM(monthTotal),
+                monthTotal === 0,
+                "No sales in " + chosen.label + "."
+            );
+
+            if (dailyCanvas) {
+                charts.push(new Chart(dailyCanvas, {
+                    type: "line",
+                    data: {
+                        labels: days.map(function(day) { return day.date.getDate(); }),
+                        datasets: [{
+                            label: "Sales",
+                            data: days.map(function(day) { return day.total; }),
+                            borderColor: CHART_COLORS.accent,
+                            borderWidth: 2,
+                            backgroundColor: IS_DARK ? "rgba(201,154,114,0.12)" : "rgba(139,98,70,0.08)",
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointHitRadius: 10,
+                            pointBackgroundColor: CHART_COLORS.accent
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: "index", intersect: false },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(items) {
+                                        return days[items[0].dataIndex].date.toLocaleDateString("en-GB", {
+                                            weekday: "long", day: "numeric", month: "long"
+                                        });
+                                    },
+                                    label: function(context) {
+                                        const day = days[context.dataIndex];
+                                        return " " + formatRM(day.total) + " · " + day.orders + " orders";
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, autoSkipPadding: 8 }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: rmTick, maxTicksLimit: 6 }
+                            }
+                        }
+                    }
+                }));
+            }
+
+
+            // ---- 2. Sales by category (horizontal bars, biggest first) ----
+            const categories = salesByCategory(salesOrders, chosen.year, chosen.month);
+            const categoryTotal = categories.reduce(function(sum, c) { return sum + c[1]; }, 0);
+
+            const categoryCanvas = prepare(
+                "categoryChart",
+                "Sales by category in " + chosen.label + ": " + categories.map(function(c) {
+                    return c[0] + " " + formatRM(c[1]);
+                }).join(", "),
+                categories.length === 0,
+                "No category sales in " + chosen.label + "."
+            );
+
+            if (categoryCanvas) {
+                charts.push(new Chart(categoryCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: categories.map(function(c) { return c[0]; }),
+                        datasets: [{
+                            label: "Sales",
+                            data: categories.map(function(c) { return c[1]; }),
+                            backgroundColor: CHART_COLORS.accent,
+                            hoverBackgroundColor: CHART_COLORS.accentStrong,
+                            borderRadius: 6,
+                            borderSkipped: "start",
+                            maxBarThickness: 26
+                        }]
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const share = Math.round(context.raw / categoryTotal * 100);
+                                        return " " + formatRM(context.raw) + " (" + share + "% of sales)";
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: rmTick, maxTicksLimit: 5 }
+                            },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                }));
+            }
+
+
+            // ---- 3. Busiest day of the week (bars, best day in dark brown) ----
+            const weekdays = weekdayAverages(days);
+            const bestWeekday = weekdays.reduce(function(best, day, index) {
+                return day.average > weekdays[best].average ? index : best;
+            }, 0);
+
+            const weekdayCanvas = prepare(
+                "weekdayChart",
+                "Average sales by weekday in " + chosen.label + ": " + weekdays.map(function(w) {
+                    return w.label + " " + formatRM(w.average);
+                }).join(", "),
+                monthTotal === 0,
+                "No sales in " + chosen.label + "."
+            );
+
+            if (weekdayCanvas) {
+                charts.push(new Chart(weekdayCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: weekdays.map(function(w) { return w.label; }),
+                        datasets: [{
+                            label: "Average sales",
+                            data: weekdays.map(function(w) { return w.average; }),
+                            backgroundColor: weekdays.map(function(w, i) {
+                                return i === bestWeekday ? CHART_COLORS.barHighlight : CHART_COLORS.barNormal;
+                            }),
+                            hoverBackgroundColor: weekdays.map(function(w, i) {
+                                return i === bestWeekday ? CHART_COLORS.barHighlight : CHART_COLORS.barHover;
+                            }),
+                            borderRadius: 6,
+                            borderSkipped: "start",
+                            maxBarThickness: 36
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const w = weekdays[context.dataIndex];
+                                        return " Average " + formatRM(w.average) +
+                                            " (" + w.days + " " + w.name + (w.days === 1 ? "" : "s") + " in " + shortMonth + ")";
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: rmTick, maxTicksLimit: 5 }
+                            }
+                        }
+                    }
+                }));
+            }
+        }
+
+        picker.addEventListener("change", draw);
+        draw();
+    })();
 
 
 

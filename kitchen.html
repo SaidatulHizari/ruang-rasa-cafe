@@ -19,11 +19,17 @@
     <script src="js/theme.js"></script>
 </head>
 
-<body>
+<body class="kds-page">
 
 <a href="#main" class="skip-link">Skip to main content</a>
 
 <div class="layout">
+
+    <!-- MENU BUTTON (only visible in full screen, top-left corner; see js/layout.js) -->
+    <button type="button" class="kds-menu-btn" data-menu-toggle
+        aria-label="Open menu" aria-controls="sidebar" aria-expanded="false" title="Menu">
+        <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
 
     <!-- MOBILE TOP BAR (only visible on small screens) -->
     <header class="mobile-topbar">
@@ -85,12 +91,8 @@
             <div class="kds-toolbar">
                 <span class="kds-clock" id="kdsClock" aria-label="Current time">--:--</span>
 
-                <button type="button" class="btn btn-outline-secondary" id="soundToggle" aria-pressed="false">
+                <button type="button" class="btn btn-outline-secondary" id="soundToggle" data-sound-toggle aria-pressed="false">
                     <i class="bi bi-volume-mute" aria-hidden="true"></i> <span>Sound off</span>
-                </button>
-
-                <button type="button" class="btn btn-outline-secondary" id="fullscreenToggle">
-                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i> <span>Full screen</span>
                 </button>
             </div>
         </div>

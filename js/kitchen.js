@@ -9,7 +9,6 @@
 // ======================================
 
 const LATE_AFTER_MINUTES = 10;            // ticket turns red after this
-const SOUND_KEY = "ruangRasaKitchenSound";
 
 // What each order's dishes looked like last time, so we can tell
 // brand-new orders from orders that were changed on the order page
@@ -155,6 +154,10 @@ function moveOrder(id, newStatus) {
     if (!order) return;
 
     order.status = newStatus;
+
+    // Before saving, so other open pages see it was already rung (js/ui.js)
+    if (newStatus === "Completed") playAlertSound("ready", "ready:" + order.id);
+
     saveOrders();          // the order page hears this and updates too
     renderKitchen();
 
@@ -202,8 +205,11 @@ window.addEventListener("storage", function(event) {
     const brandNew = newIds.size - changed.length;
     const messages = [];
 
-    if (brandNew > 0) {
-        messages.push(brandNew === 1 ? "New order received." : brandNew + " new orders received.");
+    if (brandNew === 1) {
+        const order = orders.find(function(item) { return newIds.has(item.id) && !changed.includes(item); });
+        messages.push("New order " + orderNumber(order) + " for " + order.customer + ".");
+    } else if (brandNew > 1) {
+        messages.push(brandNew + " new orders received.");
     }
 
     changed.forEach(function(order) {
@@ -215,7 +221,18 @@ window.addEventListener("storage", function(event) {
 
         document.getElementById("kdsAnnouncer").textContent = text;
         showToast(text, "info");
-        playChime();
+
+        // Muted while hidden under the full-screen frame (js/layout.js):
+        // the page inside the frame rings instead.
+        // The same signature as js/layout.js, so other open pages don't ring twice.
+        if (!document.body.classList.contains("fs-host")) {
+            const freshIds = Array.from(newIds).filter(function(id) {
+                return !changed.some(function(order) { return order.id === id; });
+            });
+            playAlertSound("new", freshIds.length
+                ? "new:" + freshIds.sort().join(",")
+                : "upd:" + changed.map(function(order) { return order.id; }).join(",") + ":" + Date.now());
+        }
     }
 });
 
@@ -245,96 +262,8 @@ setInterval(updateTimers, 15000);
 
 
 // ======================================
-// 6. SOUND (off by default; browsers only allow
-// sound after the user has clicked something)
-// ======================================
-
-let soundOn = false;
-let audioContext = null;
-
-try { soundOn = localStorage.getItem(SOUND_KEY) === "on"; } catch (error) { /* ignore */ }
-
-// Two short notes made in the browser, so no sound file is needed
-function playChime() {
-
-    if (!soundOn) return;
-
-    try {
-        audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-
-        [880, 1175].forEach(function(frequency, index) {
-
-            const start = audioContext.currentTime + index * 0.18;
-            const oscillator = audioContext.createOscillator();
-            const volume = audioContext.createGain();
-
-            oscillator.frequency.value = frequency;
-            volume.gain.setValueAtTime(0.2, start);
-            volume.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
-
-            oscillator.connect(volume).connect(audioContext.destination);
-            oscillator.start(start);
-            oscillator.stop(start + 0.35);
-        });
-    } catch (error) {
-        // No audio support - the toast is still shown
-    }
-}
-
-function updateSoundButton() {
-
-    const button = document.getElementById("soundToggle");
-
-    button.setAttribute("aria-pressed", String(soundOn));
-    button.querySelector(".bi").className = "bi " + (soundOn ? "bi-volume-up" : "bi-volume-mute");
-    button.querySelector("span").textContent = soundOn ? "Sound on" : "Sound off";
-}
-
-document.getElementById("soundToggle").addEventListener("click", function() {
-
-    soundOn = !soundOn;
-
-    try { localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); } catch (error) { /* ignore */ }
-
-    updateSoundButton();
-    playChime();   // a quick test so they know it works
-});
-
-
-// ======================================
-// 7. FULL SCREEN (for a tablet on the kitchen wall)
-// ======================================
-
-const fullscreenButton = document.getElementById("fullscreenToggle");
-
-if (!document.documentElement.requestFullscreen) {
-    fullscreenButton.hidden = true;   // e.g. iPhone Safari
-}
-
-fullscreenButton.addEventListener("click", function() {
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    } else {
-        document.documentElement.requestFullscreen().catch(function() {
-            showToast("Full screen is not available in this browser.", "info");
-        });
-    }
-});
-
-document.addEventListener("fullscreenchange", function() {
-    const full = Boolean(document.fullscreenElement);
-
-    document.body.classList.toggle("kds-fullscreen", full);
-    fullscreenButton.querySelector(".bi").className =
-        "bi " + (full ? "bi-fullscreen-exit" : "bi-arrows-fullscreen");
-    fullscreenButton.querySelector("span").textContent = full ? "Exit full screen" : "Full screen";
-});
-
-
-// ======================================
 // START
 // ======================================
 
-updateSoundButton();
 renderKitchen();
 updateTimers();

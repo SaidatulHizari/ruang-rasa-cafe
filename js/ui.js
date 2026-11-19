@@ -5,9 +5,83 @@
 
 // ======================================
 // 1. TOAST NOTIFICATION
+// Styles live in css/style.css (section 20).
 // ======================================
 
-function showToast(message, type = "success") {
+const TOAST_LIMIT = 3;   // older toasts close when a 4th arrives
+
+const TOAST_ICONS = {
+    success: "bi-check-circle-fill",
+    error: "bi-x-circle-fill",
+    info: "bi-info-circle-fill"
+};
+
+// options.action = { label: "View", href: "orders.html" } adds a link button
+function showToast(message, type = "success", options = {}) {
+
+    if (!TOAST_ICONS[type]) type = "success";
+
+    const container = toastContainer();
+    const open = Array.from(container.querySelectorAll(".custom-toast:not(.leaving)"));
+
+    // The same message again: count it and restart its timer instead of stacking a copy
+    const same = open.find(function(toast) {
+        return toast.dataset.type === type && toast.dataset.message === message;
+    });
+
+    if (same) {
+        const count = Number(same.dataset.count) + 1;
+
+        same.dataset.count = count;
+        same.querySelector(".toast-count").textContent = "×" + count;
+        same.classList.remove("bump");
+        void same.offsetWidth;                // restart the bump animation
+        same.classList.add("bump");
+        startToastTimer(same, toastDuration(message, type));
+        return;
+    }
+
+    open.slice(0, Math.max(0, open.length - TOAST_LIMIT + 1)).forEach(closeToast);
+
+    const toast = document.createElement("div");
+    toast.className = "custom-toast " + type;
+    toast.dataset.type = type;
+    toast.dataset.message = message;
+    toast.dataset.count = 1;
+
+    // Errors interrupt the screen reader; the others wait their turn
+    if (type === "error") toast.setAttribute("role", "alert");
+
+    toast.innerHTML =
+        '<i class="toast-icon bi ' + TOAST_ICONS[type] + '" aria-hidden="true"></i>' +
+        '<span class="toast-message"></span>' +
+        '<span class="toast-count" aria-hidden="true"></span>' +
+        '<button type="button" class="toast-close" aria-label="Dismiss notification">' +
+            '<i class="bi bi-x-lg" aria-hidden="true"></i>' +
+        '</button>';
+
+    toast.querySelector(".toast-message").textContent = message;
+    toast.querySelector(".toast-close").addEventListener("click", function() { closeToast(toast); });
+
+    if (options.action && options.action.href) {
+        const link = document.createElement("a");
+        link.className = "toast-action";
+        link.href = options.action.href;
+        link.textContent = options.action.label || "View";
+        toast.insertBefore(link, toast.querySelector(".toast-close"));
+    }
+
+    // Stay open while the mouse or keyboard focus is on it
+    toast.addEventListener("mouseenter", function() { pauseToast(toast); });
+    toast.addEventListener("mouseleave", function() { resumeToast(toast); });
+    toast.addEventListener("focusin", function() { pauseToast(toast); });
+    toast.addEventListener("focusout", function() { resumeToast(toast); });
+
+    container.appendChild(toast);
+    startToastTimer(toast, toastDuration(message, type) + (options.action ? 2000 : 0));
+}
+
+function toastContainer() {
 
     let container = document.getElementById("toastContainer");
 
@@ -20,115 +94,64 @@ function showToast(message, type = "success") {
         container.setAttribute("aria-live", "polite");
 
         document.body.appendChild(container);
+
+        // Hold every toast while this tab is in the background, so none are missed
+        document.addEventListener("visibilitychange", function() {
+            container.querySelectorAll(".custom-toast:not(.leaving)").forEach(function(toast) {
+                if (document.hidden) pauseToast(toast);
+                else resumeToast(toast);
+            });
+        });
     }
 
-    if (!document.getElementById("toastStyles")) {
+    return container;
+}
 
-        const style = document.createElement("style");
-        style.id = "toastStyles";
+// About 4 seconds, longer for long messages, and errors stay longer
+function toastDuration(message, type) {
+    const base = type === "error" ? 6000 : 4000;
+    return Math.min(base + Math.max(0, message.length - 50) * 50, 10000);
+}
 
-        style.textContent = `
-            #toastContainer {
-                position: fixed;
-                top: 25px;
-                right: 25px;
-                z-index: 99999;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
+function startToastTimer(toast, ms) {
+    clearTimeout(toast.toastTimer);
+    toast.toastLeft = ms;
+    toast.toastEnds = Date.now() + ms;
+    toast.toastPaused = false;
 
-            .custom-toast {
-                min-width: 280px;
-                max-width: 350px;
-                padding: 16px 20px;
-                border-radius: 12px;
-                background: white;
-                box-shadow: 0 8px 25px rgba(0,0,0,0.13);
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                animation: toastSlide 0.4s ease;
-                border-left: 5px solid #6b9b72;
-                font-family: Poppins, sans-serif;
-                transition: 0.4s ease;
-            }
-
-            .custom-toast.error {
-                border-left-color: #dc6b6b;
-            }
-
-            .custom-toast.info {
-                border-left-color: #7198c5;
-            }
-
-            .toast-icon {
-                font-size: 23px;
-            }
-
-            .toast-message {
-                color: #5c4033;
-                font-size: 13px;
-                font-weight: 500;
-            }
-
-            @keyframes toastSlide {
-                from {
-                    opacity: 0;
-                    transform: translateX(40px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-
-            @media(max-width: 480px) {
-                #toastContainer {
-                    left: 15px;
-                    right: 15px;
-                    top: 15px;
-                }
-
-                .custom-toast {
-                    min-width: auto;
-                    max-width: 100%;
-                }
-            }
-        `;
-
-        document.head.appendChild(style);
+    if (document.hidden) {
+        pauseToast(toast);
+        return;
     }
 
-    const icons = {
-        success: "bi-check-circle-fill",
-        error: "bi-x-circle-fill",
-        info: "bi-info-circle-fill"
-    };
+    toast.toastTimer = setTimeout(function() { closeToast(toast); }, ms);
+}
 
-    const toast = document.createElement("div");
-    toast.className = "custom-toast " + type;
+function pauseToast(toast) {
+    if (toast.toastPaused) return;
+    clearTimeout(toast.toastTimer);
+    toast.toastLeft = Math.max(0, toast.toastEnds - Date.now());
+    toast.toastPaused = true;
+}
 
-    const icon = document.createElement("i");
-    icon.className = "toast-icon bi " + (icons[type] || icons.success);
-    icon.setAttribute("aria-hidden", "true");
+function resumeToast(toast) {
+    if (!toast.toastPaused || toast.classList.contains("leaving")) return;
+    if (toast.matches(":hover") || toast.contains(document.activeElement) || document.hidden) return;
 
-    const text = document.createElement("span");
-    text.className = "toast-message";
-    text.textContent = message;
+    // At least 2 seconds left so the user can finish reading
+    startToastTimer(toast, Math.max(toast.toastLeft, 2000));
+}
 
-    toast.appendChild(icon);
-    toast.appendChild(text);
-    container.appendChild(toast);
+function closeToast(toast) {
+    if (toast.classList.contains("leaving")) return;
 
-    setTimeout(function() {
-        toast.style.opacity = "0";
-        toast.style.transform = "translateX(40px)";
+    clearTimeout(toast.toastTimer);
+    toast.classList.add("leaving");
 
-        setTimeout(function() {
-            toast.remove();
-        }, 400);
-    }, 3000);
+    // Don't lose keyboard focus when the toast being used goes away
+    if (toast.contains(document.activeElement)) document.activeElement.blur();
+
+    setTimeout(function() { toast.remove(); }, 300);
 }
 
 
@@ -334,3 +357,76 @@ function confirmDialog(options) {
     });
 }
 
+
+
+// ======================================
+// 5. ALERT SOUND (new order / order ready)
+// Made in the browser, so no sound file is needed.
+// On by default; the "Sound" button in the sidebar turns it off.
+// ======================================
+
+const ALERT_SOUND_KEY = "ruangRasaSound";
+const LAST_ALERT_KEY = "ruangRasaLastAlert";
+let alertAudio = null;
+
+function soundEnabled() {
+    try { return localStorage.getItem(ALERT_SOUND_KEY) !== "off"; } catch (error) { return true; }
+}
+
+function setSoundEnabled(on) {
+    try { localStorage.setItem(ALERT_SOUND_KEY, on ? "on" : "off"); } catch (error) { /* ignore */ }
+}
+
+function getAlertAudio() {
+    const AudioClass = window.AudioContext || window.webkitAudioContext;
+    if (!alertAudio && AudioClass) alertAudio = new AudioClass();
+    if (alertAudio && alertAudio.state === "suspended") alertAudio.resume();
+    return alertAudio;
+}
+
+// Browsers only allow sound after a click or key press on the page,
+// so wake the audio on the first one. Later alerts can then ring.
+["pointerdown", "keydown"].forEach(function(type) {
+    document.addEventListener(type, function() {
+        try { getAlertAudio(); } catch (error) { /* no audio support */ }
+    }, { once: true, capture: true });
+});
+
+// kind: "new" (two notes going up) or "ready" (three brighter notes)
+// signature: when several tabs hear the same alert, only the first one rings
+function playAlertSound(kind, signature) {
+
+    if (!soundEnabled()) return;
+
+    if (signature) {
+        try {
+            if (localStorage.getItem(LAST_ALERT_KEY) === signature) return;
+            localStorage.setItem(LAST_ALERT_KEY, signature);
+        } catch (error) { /* ring anyway */ }
+    }
+
+    try {
+        const audio = getAlertAudio();
+        if (!audio) return;
+
+        const notes = kind === "ready" ? [784, 988, 1319] : [880, 1175];
+
+        notes.forEach(function(frequency, index) {
+
+            const start = audio.currentTime + index * 0.16;
+            const oscillator = audio.createOscillator();
+            const volume = audio.createGain();
+
+            oscillator.type = kind === "ready" ? "triangle" : "sine";
+            oscillator.frequency.value = frequency;
+            volume.gain.setValueAtTime(0.22, start);
+            volume.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
+
+            oscillator.connect(volume).connect(audio.destination);
+            oscillator.start(start);
+            oscillator.stop(start + 0.4);
+        });
+    } catch (error) {
+        // No audio support - the toast is still shown
+    }
+}

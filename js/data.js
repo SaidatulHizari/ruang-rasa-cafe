@@ -51,7 +51,7 @@ const DEMO_DATA_KEYS = [
 // Change this when the built-in menu prices or the sample data change.
 // A browser holding data from an older version starts fresh once, so it
 // picks up the new prices instead of keeping its saved copy.
-const DEMO_DATA_VERSION = "2026-11-14-prices";
+const DEMO_DATA_VERSION = "2026-11-17-hours";
 
 (function upgradeDemoData() {
     try {
@@ -537,7 +537,16 @@ function todaysSalesTarget() {
     return HISTORY_THIS_MONTH_TARGET * dayBusyness(today) / monthBusyness;
 }
 
-const CAFE_OPENS_AT = 8;   // 8:00 am
+const CAFE_OPENS_AT = 8;    // 8:00 am
+const CAFE_CLOSES_AT = 22;  // 10:00 pm
+
+// How busy the café is at a time of day (hour can be 13.5 = 1:30 pm):
+// steady through the day, with a lunch rush (12:45) and a dinner rush (7:30 pm)
+function hourBusyness(hour) {
+    return 0.35 +
+        Math.exp(-Math.pow((hour - 12.75) / 1.1, 2)) +
+        0.9 * Math.exp(-Math.pow((hour - 19.5) / 1.2, 2));
+}
 
 // Each name is used once a day (see nextCustomer in sampleOrders),
 // so keep this list longer than a busy day's orders (about 80)
@@ -559,10 +568,12 @@ const SAMPLE_CUSTOMERS = [
 ];
 
 // Today's orders, as if the café is about to close: a full day's
-// sales of completed orders since 8:00 am with a lunch and a dinner
-// rush, and the last few orders still in the kitchen. The last orders
-// are a few minutes old, so the kitchen timers make sense right after
-// a reset. Every total
+// sales of completed orders from 8:00 am to just before 10:00 pm, with
+// a lunch and a dinner rush, and the last few orders still in the kitchen.
+// The day is always full, whatever the time of the reset, so the charts
+// look like a real day (earlier in the day, some completed orders have
+// times later than the clock). The kitchen orders are a few minutes old,
+// so the kitchen timers make sense right after a reset. Every total
 // matches its items, at today's menu prices.
 function sampleOrders() {
 
@@ -573,11 +584,8 @@ function sampleOrders() {
     const today = new Date();
     const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
 
-    // Opened at 8:00 am. Before about 10 am that would leave almost no day,
-    // so the orders then start two hours ago (never before midnight).
-    let opened = midnight + CAFE_OPENS_AT * 60 * minute;
-    if (now - opened < 120 * minute) opened = Math.max(midnight + minute, now - 120 * minute);
-    const lastCompleted = Math.max(opened, now - 18 * minute);
+    const opened = midnight + CAFE_OPENS_AT * 60 * minute;
+    const lastCompleted = midnight + CAFE_CLOSES_AT * 60 * minute - 20 * minute;   // 9:40 pm
 
     function pick(list) {
         return list[Math.floor(random() * list.length)];
@@ -618,10 +626,7 @@ function sampleOrders() {
         for (;;) {
             const time = opened + random() * (lastCompleted - opened);
             const hour = (time - midnight) / (60 * minute);
-            const busy = 0.35 +
-                Math.exp(-Math.pow((hour - 12.75) / 1.1, 2)) +        // lunch
-                0.9 * Math.exp(-Math.pow((hour - 19.5) / 1.2, 2));    // dinner
-            if (random() * 2.4 < busy) return Math.round(time);
+            if (random() * 2.4 < hourBusyness(hour)) return Math.round(time);
         }
     }
 
@@ -661,17 +666,21 @@ function sampleOrders() {
     const target = todaysSalesTarget();
     let total = list.reduce(function(sum, item) { return sum + item.total; }, 0);
 
+    const completed = [];
+
     while (total < target - 15) {
         const createdAt = pickTime();
-        const late = createdAt > now - 120 * minute;   // the cakes ran out in the last two hours
+        const late = createdAt > lastCompleted - 120 * minute;   // the cakes ran out in the last two hours
         const done = order(createdAt, "Completed", pickItems(late));
-        list.push(done);
+        completed.push(done);
         total += done.total;
     }
 
-    // Oldest first, numbered ORD001, ORD002...
-    return list
-        .sort(function(a, b) { return a.createdAt - b.createdAt; })
+    // The day's completed orders oldest first, then the kitchen orders
+    // (always the newest), numbered ORD001, ORD002...
+    completed.sort(function(a, b) { return a.createdAt - b.createdAt; });
+
+    return completed.concat(list)
         .map(function(item, index) { return Object.assign({ id: index + 1 }, item); });
 }
 
@@ -705,7 +714,8 @@ if (orders === null) {
 // end-of-day report, instead of thousands of separate orders:
 //   { date: "dd/mm/yyyy", orders: 52, total: 1612,
 //     payments: { Cash: [amount, orders], Card: [...], QR: [...] },
-//     items: { "Nasi Lemak": 9, ... } }
+//     items: { "Nasi Lemak": 9, ... },
+//     hours: { "8": 2, "12": 7, ... } }   <- orders in each hour (8 = 8am-9am)
 // The charts and report cards add these days to the live orders.
 // The order lists only show live orders.
 // ======================================
@@ -719,6 +729,23 @@ function sampleSalesHistory() {
     const today = new Date();
     const targets = HISTORY_MONTH_TARGETS.concat([HISTORY_THIS_MONTH_TARGET]);
     const days = [];
+
+    // The hour each order came in, following the lunch and dinner rushes.
+    // Its own random numbers, so the sales figures stay exactly as before.
+    const hourRandom = makeRandom(20261117);
+    const openHours = [];
+    for (let h = CAFE_OPENS_AT; h < CAFE_CLOSES_AT; h++) openHours.push(h);
+    const hourWeights = openHours.map(function(h) { return hourBusyness(h + 0.5); });
+    const hourWeightSum = hourWeights.reduce(function(sum, w) { return sum + w; }, 0);
+
+    function pickHour() {
+        let roll = hourRandom() * hourWeightSum;
+        for (let i = 0; i < openHours.length; i++) {
+            roll -= hourWeights[i];
+            if (roll < 0) return openHours[i];
+        }
+        return openHours[openHours.length - 1];
+    }
 
     targets.forEach(function(monthTarget, index) {
 
@@ -745,7 +772,8 @@ function sampleSalesHistory() {
                 orders: 0,
                 total: 0,
                 payments: { Cash: [0, 0], Card: [0, 0], QR: [0, 0] },
-                items: {}
+                items: {},
+                hours: {}
             };
 
             // Ring up orders until the day reaches its target
@@ -770,6 +798,9 @@ function sampleSalesHistory() {
                 summary.payments[method][1] += 1;
                 summary.orders += 1;
                 summary.total += orderTotal;
+
+                const hour = pickHour();
+                summary.hours[hour] = (summary.hours[hour] || 0) + 1;
             }
 
             days.push(summary);

@@ -632,6 +632,9 @@ function placeOrder() {
 
     orders.push(newOrder);
 
+    // Before saving, so other open pages see it was already rung (js/ui.js)
+    playAlertSound("new", "new:" + newOrder.id);
+
     saveOrders();
 
     cart = [];
@@ -662,6 +665,8 @@ function updateOrderStatus(id, newStatus) {
     if (order) {
 
         order.status = newStatus;
+
+        if (newStatus === "Completed") playAlertSound("ready", "ready:" + order.id);
 
         saveOrders();
         displayOrders();

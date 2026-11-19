@@ -116,16 +116,20 @@ body {
     min-height: 100vh;
 }
 
+/* No scroll bar of its own: when the menu is taller than the window,
+   the page scroll bar takes you down to Logout. js/layout.js sets
+   --sidebar-top so the menu then stays put with Logout in view. */
 .sidebar {
     width: var(--sidebar-width);
     flex-shrink: 0;
+    align-self: flex-start;
     background: var(--brown-900);
     color: white;
-    padding: 28px 18px;
+    --sidebar-pad: 28px;
+    padding: var(--sidebar-pad) 18px;
     position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
+    top: var(--sidebar-top, 0px);
+    min-height: 100vh;
 }
 
 .sidebar .brand {
@@ -861,6 +865,8 @@ body {
         width: 270px;
         max-width: 85vw;
         height: 100vh;
+        min-height: 0;
+        overflow-y: auto;
         transform: translateX(-100%);
         transition: transform .25s ease;
         visibility: hidden;
@@ -1003,10 +1009,6 @@ button:focus-visible,
     color: var(--brown-700);
 }
 
-.custom-toast .toast-icon         { color: #4f8a5b; }
-.custom-toast.error .toast-icon   { color: #c8504f; }
-.custom-toast.info .toast-icon    { color: #4f78a8; }
-
 
 /* ======================================
    11. SIDEBAR ACTION BUTTONS (dark mode, reset)
@@ -1131,12 +1133,6 @@ button:focus-visible,
 :root[data-theme="dark"] .status.pending   { background: var(--pending-bg);   color: var(--pending-fg); }
 :root[data-theme="dark"] .status.preparing { background: var(--preparing-bg); color: var(--preparing-fg); }
 :root[data-theme="dark"] .status.completed { background: var(--completed-bg); color: var(--completed-fg); }
-
-/* Toast notifications */
-:root[data-theme="dark"] .custom-toast {
-    background: var(--white);
-    color: var(--text);
-}
 
 /* Grey "outline" buttons (Edit, Receipt) need lighter text */
 :root[data-theme="dark"] .btn-outline-secondary {
@@ -1413,14 +1409,98 @@ button:focus-visible,
     font-size: 13px;
 }
 
-/* Full screen: hide the sidebar so the tickets get the whole screen */
-.kds-fullscreen .sidebar,
-.kds-fullscreen .mobile-topbar {
+/* Full screen: the sidebar steps aside so the tickets get the whole screen.
+   It slides in from the left (on any screen size) with the menu button. */
+.kds-page.is-fullscreen .mobile-topbar {
     display: none;
 }
 
-.kds-fullscreen .main-content {
+.kds-page.is-fullscreen .main-content {
     margin-left: 0;
+}
+
+.kds-page.is-fullscreen .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 270px;
+    max-width: 85vw;
+    height: 100vh;
+    min-height: 0;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    visibility: hidden;
+}
+
+.kds-page.is-fullscreen .sidebar.open {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: 8px 0 30px rgba(0, 0, 0, .3);
+}
+
+.kds-page.is-fullscreen .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 950;
+    background: rgba(40, 28, 20, .5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+}
+
+.kds-page.is-fullscreen .sidebar-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Menu button: top-left corner, only in full screen (looks like the full screen button) */
+.kds-menu-btn {
+    display: none;
+}
+
+.kds-page.is-fullscreen .kds-menu-btn {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 901;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--brown-200);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text-muted);
+    font-size: 17px;
+    box-shadow: var(--shadow);
+    opacity: .85;
+    transition: opacity .15s, color .15s, border-color .15s;
+}
+
+.kds-page.is-fullscreen .kds-menu-btn:hover,
+.kds-page.is-fullscreen .kds-menu-btn:focus-visible {
+    opacity: 1;
+    color: var(--heading);
+    border-color: var(--brown-500);
+}
+
+@media (max-width: 768px) {
+    /* No top bar in full screen: leave room for the two corner buttons */
+    .kds-page.is-fullscreen .main-content {
+        padding-top: 52px;
+    }
+
+    /* Looks 28px, but the finger target is 44px */
+    .kds-page.is-fullscreen .kds-menu-btn::before {
+        content: "";
+        position: absolute;
+        inset: -8px;
+    }
 }
 
 @media (max-width: 991.98px) {
@@ -2128,4 +2208,353 @@ body .btn-outline-secondary {
 /* Role under the user's name (dashboard header) */
 .profile-role {
     font-size: 12px;
+}
+
+
+/* ======================================
+   19. FULL SCREEN BUTTON (every app page, made in js/layout.js)
+   ====================================== */
+
+.fullscreen-btn {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 901;   /* above the phone top bar, below the open mobile menu */
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--brown-200);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text-muted);
+    font-size: 14px;
+    box-shadow: var(--shadow);
+    opacity: .85;
+    transition: opacity .2s, transform .2s, color .15s, border-color .15s;
+}
+
+.fullscreen-btn:hover,
+.fullscreen-btn:focus-visible {
+    opacity: 1;
+    color: var(--heading);
+    border-color: var(--brown-500);
+}
+
+/* Hidden while scrolling down; comes back when scrolling up */
+.fullscreen-btn.is-hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* The frame that keeps full screen on while moving between pages */
+.fullscreen-frame {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    z-index: 2147483647;
+    background: var(--cream-50);
+}
+
+/* The page underneath the frame: no scrolling, no second button */
+.fs-host {
+    overflow: hidden;
+}
+
+.fs-host .fullscreen-btn {
+    display: none;
+}
+
+/* Desktop: a little extra space on top so the button never touches the page header */
+@media (min-width: 769px) {
+    .main-content {
+        padding-top: 40px;
+    }
+}
+
+/* Phones: sit inside the dark top bar, on its right side */
+@media (max-width: 768px) {
+    .fullscreen-btn {
+        top: 18px;
+        right: 16px;
+        background: transparent;
+        border-color: rgba(255, 255, 255, .35);
+        color: rgba(255, 255, 255, .85);
+        box-shadow: none;
+    }
+
+    /* Looks 28px, but the finger target is 44px (same rule as other phone controls) */
+    .fullscreen-btn::before {
+        content: "";
+        position: absolute;
+        inset: -8px;
+    }
+
+    .fullscreen-btn:hover,
+    .fullscreen-btn:focus-visible {
+        color: #fff;
+        border-color: #fff;
+    }
+
+    /* Kitchen full screen hides the top bar, so go back to the light style */
+    .kds-page.is-fullscreen .fullscreen-btn {
+        top: 8px;
+        right: 8px;
+        background: var(--white);
+        border-color: var(--brown-200);
+        color: var(--text-muted);
+    }
+}
+
+
+/* ======================================
+   20. TOAST NOTIFICATIONS (made in js/ui.js)
+   ====================================== */
+
+:root {
+    --toast-success: #3f7a4c;
+    --toast-error:   #b5403f;
+    --toast-info:    #4f78a8;
+}
+
+:root[data-theme="dark"] {
+    --toast-success: #93d6a8;
+    --toast-error:   #f0928f;
+    --toast-info:    #a9bff5;
+}
+
+/* Below the full screen button, so it never covers it */
+#toastContainer {
+    position: fixed;
+    top: 46px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    pointer-events: none;   /* clicks pass through the gaps */
+}
+
+.custom-toast {
+    --toast-color: var(--toast-success);
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 8px 12px 16px;
+    border: 1px solid var(--brown-200);
+    border-left: 5px solid var(--toast-color);
+    border-radius: 12px;
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    font-family: Poppins, sans-serif;
+    pointer-events: auto;
+    animation: toastIn .3s ease;
+}
+
+.custom-toast.error { --toast-color: var(--toast-error); }
+.custom-toast.info  { --toast-color: var(--toast-info); }
+
+.custom-toast.bump {
+    animation: toastBump .3s ease;
+}
+
+/* After .bump, so closing always wins */
+.custom-toast.leaving {
+    animation: toastOut .3s ease forwards;
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    font-size: 21px;
+    color: var(--toast-color);
+}
+
+.toast-message {
+    flex: 1;
+    min-width: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+/* "×2" when the same message comes again */
+.toast-count {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--cream-100);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.toast-count:empty {
+    display: none;
+}
+
+/* "View order" / "Open kitchen" link on order alerts */
+.toast-action {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: var(--cream-100);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.toast-action:hover,
+.toast-action:focus-visible {
+    background: var(--brown-700);
+    color: #fff;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.toast-close:hover,
+.toast-close:focus-visible {
+    background: var(--cream-100);
+    color: var(--heading);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes toastOut {
+    to { opacity: 0; transform: translateX(30px); }
+}
+
+@keyframes toastBump {
+    50% { transform: scale(1.03); }
+}
+
+/* Phones: full width at the top, with a 44px close button */
+@media (max-width: 768px) {
+    #toastContainer {
+        top: 12px;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        max-width: none;
+    }
+
+    .toast-close {
+        width: 44px;
+        height: 44px;
+        margin: -8px 0;
+    }
+
+    @keyframes toastIn {
+        from { opacity: 0; transform: translateY(-16px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    @keyframes toastOut {
+        to { opacity: 0; transform: translateY(-16px); }
+    }
+}
+
+/* Fade only, no sliding */
+@media (prefers-reduced-motion: reduce) {
+    .custom-toast,
+    .custom-toast.bump {
+        animation: toastFade .2s ease;
+    }
+
+    .custom-toast.leaving {
+        animation: toastFadeOut .2s ease forwards;
+    }
+
+    @keyframes toastFade {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    @keyframes toastFadeOut {
+        to { opacity: 0; }
+    }
+}
+
+
+/* ======================================
+   21. SIDEBAR ON SHORT SCREENS
+   ====================================== */
+
+/* Tighter spacing when the window is short, so the whole menu
+   (down to Logout) usually fits without any scrolling */
+@media (max-height: 800px) {
+
+    .sidebar {
+        --sidebar-pad: 18px;
+    }
+
+    .sidebar .brand-subtitle {
+        margin-bottom: 14px;
+    }
+
+    .sidebar .nav-label {
+        margin: 12px 12px 6px;
+    }
+
+    .sidebar a,
+    .sidebar-action {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-bottom: 2px;
+    }
+
+    .sidebar-user {
+        padding-top: 7px;
+        padding-bottom: 7px;
+        margin-bottom: 2px;
+    }
+}
+
+/* Slide-in menu (phones, and the kitchen in full screen): the page behind
+   is locked, so the menu scrolls by itself - but with no scroll bar.
+   A soft fade at the bottom shows there is more below (js/layout.js). */
+.sidebar.open {
+    scrollbar-width: none;
+}
+
+.sidebar.open::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar.open.more-below::after {
+    content: "";
+    display: block;
+    position: sticky;
+    bottom: calc(-1 * var(--sidebar-pad));
+    height: 56px;
+    margin: -56px -18px calc(-1 * var(--sidebar-pad));
+    background: linear-gradient(to bottom, transparent, var(--brown-900) 80%);
+    pointer-events: none;
 }

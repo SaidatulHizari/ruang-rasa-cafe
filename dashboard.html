@@ -154,6 +154,39 @@
             font-size: 12px;
         }
 
+        /* 7-day trend line, pinned to the bottom of the card so the two
+           cards line up even when a big number wraps onto two lines */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-card small {
+            margin-bottom: 12px;
+        }
+
+        .card-spark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px dashed var(--brown-200);
+        }
+
+        .spark-caption {
+            flex-shrink: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .spark-canvas {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            height: 34px;
+        }
+
         /* SECTION CARDS */
         .section-card {
             background: white;
@@ -395,6 +428,11 @@
                     <h3 id="dashboardSales">RM 0.00</h3>
                     <small>Revenue from completed orders</small>
 
+                    <div class="card-spark">
+                        <span class="spark-caption">Last 7 days</span>
+                        <div class="spark-canvas"><canvas id="salesSpark"></canvas></div>
+                    </div>
+
                 </div>
             </div>
 
@@ -409,6 +447,11 @@
                     <p class="card-label">Total Orders</p>
                     <h3 id="dashboardOrders">0</h3>
                     <small>All customer orders</small>
+
+                    <div class="card-spark">
+                        <span class="spark-caption">Last 7 days</span>
+                        <div class="spark-canvas"><canvas id="ordersSpark"></canvas></div>
+                    </div>
 
                 </div>
             </div>
@@ -488,10 +531,28 @@
 
         </div>
 
-        <!-- BEST SELLING CHART -->
+        <!-- TODAY BY HOUR + BEST SELLING CHART -->
         <div class="row g-3 mb-4">
 
-            <div class="col-12">
+            <div class="col-lg-6">
+                <div class="section-card">
+
+                    <div class="section-heading">
+                        <div>
+                            <h5 class="section-title">Today by Hour</h5>
+                            <div class="section-subtitle" id="hourlySubtitle">
+                                Orders placed in each hour today
+                            </div>
+                        </div>
+                        <span class="corner-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+                    </div>
+
+                    <div id="hourlyChart" class="chart-container"></div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-6">
                 <div class="section-card">
 
                     <div class="section-heading">
@@ -703,11 +764,172 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
+    // 7-day trend lines inside the Total Sales and Total Orders cards
+    const week = lastDays(orders, 7);
+    drawSparkline(document.getElementById("salesSpark"), week, "total");
+    drawSparkline(document.getElementById("ordersSpark"), week, "orders");
+
+
     // ==================================
     // 5. ORDER STATUS (donut, shared with the sales page)
     // ==================================
 
     renderStatusDonut("orderChart", orders);
+
+
+    // ==================================
+    // 5b. TODAY BY HOUR
+    // Bars: today's orders in each opening hour (busiest hour highlighted).
+    // Dashed line: a usual day (average of the last 4 weeks) to compare with.
+    // ==================================
+
+    (function renderHourlyChart() {
+
+        const element = document.getElementById("hourlyChart");
+        const subtitle = document.getElementById("hourlySubtitle");
+        const byHour = ordersByHourToday(orders);
+        const usual = usualDayByHour(28);
+        const inHours = byHour.counts.reduce(function(sum, n) { return sum + n; }, 0);
+
+        if (inHours === 0 && !usual) {
+            element.innerHTML = emptyStateHTML(
+                "clock-history",
+                "No orders yet today. They will show here hour by hour.",
+                "orders.html",
+                "Go to orders →"
+            );
+            return;
+        }
+
+        // Subtitle: total today, busiest hour, and any orders outside opening hours
+        const busiest = inHours > 0 ? byHour.counts.indexOf(Math.max.apply(null, byHour.counts)) : -1;
+        const parts = [byHour.total.toLocaleString("en-MY") + (byHour.total === 1 ? " order" : " orders") + " today"];
+
+        if (busiest >= 0) {
+            const hour = byHour.hours[busiest];
+            parts.push("busiest " + hourLabel(hour) + "–" + hourLabel(hour + 1) + " (" + byHour.counts[busiest] + ")");
+        }
+        if (byHour.afterHours > 0) {
+            parts.push(byHour.afterHours + " outside opening hours");
+        }
+        subtitle.textContent = parts.join(" · ");
+
+        // Screen readers get the same numbers as text
+        const description = "Orders per hour today" +
+            (usual ? ", compared with a usual day" : "") + ": " +
+            byHour.hours.map(function(h, i) {
+                return hourLabel(h) + " " + byHour.counts[i] + (usual ? " (usual " + usual.averages[i] + ")" : "");
+            }).join(", ");
+
+        element.innerHTML = "";
+        const canvas = document.createElement("canvas");
+        canvas.setAttribute("role", "img");
+        canvas.setAttribute("aria-label", description);
+        element.appendChild(canvas);
+
+        const datasets = [{
+            type: "bar",
+            label: "Today",
+            data: byHour.counts,
+            order: 2,   // drawn under the line
+            backgroundColor: byHour.counts.map(function(n, i) {
+                return i === busiest ? CHART_COLORS.barHighlight : CHART_COLORS.barNormal;
+            }),
+            hoverBackgroundColor: byHour.counts.map(function(n, i) {
+                return i === busiest ? CHART_COLORS.barHighlight : CHART_COLORS.barHover;
+            }),
+            borderRadius: 6,
+            borderSkipped: "start",
+            maxBarThickness: 32
+        }];
+
+        if (usual) {
+            datasets.push({
+                type: "line",
+                label: "Usual day (last 4 weeks)",
+                data: usual.averages,
+                order: 1,
+                borderColor: CHART_COLORS.compareLine,
+                backgroundColor: CHART_COLORS.compareLine,
+                borderWidth: 2,
+                borderDash: [5, 4],
+                tension: 0.35,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHitRadius: 10,
+                fill: false
+            });
+        }
+
+        new Chart(canvas, {
+
+            data: {
+                labels: byHour.hours.map(hourLabel),
+                datasets: datasets
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+
+                plugins: {
+                    legend: {
+                        display: Boolean(usual),
+                        position: "top",
+                        align: "end",
+                        labels: {
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            font: { size: 11 },
+                            // Legend swatches: a plain bar and a dashed line
+                            generateLabels: function(chart) {
+                                return chart.data.datasets.map(function(dataset, index) {
+                                    const isLine = dataset.type === "line";
+                                    return {
+                                        text: dataset.label,
+                                        datasetIndex: index,
+                                        fontColor: CHART_COLORS.text,
+                                        fillStyle: isLine ? "transparent" : CHART_COLORS.barNormal,
+                                        strokeStyle: isLine ? CHART_COLORS.compareLine : CHART_COLORS.barNormal,
+                                        lineWidth: isLine ? 2 : 0,
+                                        lineDash: isLine ? [4, 3] : [],
+                                        pointStyle: isLine ? "line" : "rectRounded",
+                                        hidden: !chart.isDatasetVisible(index)
+                                    };
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(items) {
+                                const hour = byHour.hours[items[0].dataIndex];
+                                return hourLabel(hour) + " – " + hourLabel(hour + 1);
+                            },
+                            label: function(context) {
+                                if (context.dataset.type === "line") {
+                                    return " Usual day: " + context.raw + " orders";
+                                }
+                                return " Today: " + context.raw + (context.raw === 1 ? " order" : " orders");
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 }, autoSkip: true, maxRotation: 0 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    })();
 
 
     // ==================================
@@ -863,7 +1085,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (event.target.closest("a")) return;   // the link handles itself
                 const link = event.target.closest("tr") &&
                     event.target.closest("tr").querySelector(".row-link-anchor");
-                if (link) window.location.href = link.href;
+                if (link) link.click();   // a real click, so full screen can keep going (js/layout.js)
             });
 
         }

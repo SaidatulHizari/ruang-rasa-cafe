@@ -18,6 +18,16 @@ const CHART_COLORS = {
     accent:  IS_DARK ? "#c99a72" : "#a77c5b",
     accentStrong: IS_DARK ? "#e0b994" : "#49372d",
 
+    // Bar charts that pick out one bar (busiest hour, busiest weekday).
+    // Dark mode: calmer bars + a bright highlight, so the gap stays clear
+    // (#8f6f58 is 3.5:1 on the card, the highlight is 3.1:1 against it).
+    barNormal:    IS_DARK ? "#8f6f58" : "#a77c5b",
+    barHighlight: IS_DARK ? "#f0cfa8" : "#49372d",
+    barHover:     IS_DARK ? "#b48a6a" : "#8f6749",   // a normal bar under the mouse
+
+    // Dashed "usual day" line drawn over today's bars (muted text colour)
+    compareLine:  IS_DARK ? "#b5a596" : "#75665b",
+
     status: {
         Completed: "#6b9b72",
         Pending:   "#e5ad55",
@@ -285,4 +295,275 @@ function renderStatusDonut(containerId, orderList, monthCount = 6) {
 
     picker.addEventListener("change", draw);
     draw();
+}
+
+
+// ======================================
+// 4. DAY-BY-DAY HELPERS (new charts on both pages)
+// ======================================
+
+// "dd/mm/yyyy" - the same format orders and salesHistory use
+function dayKey(date) {
+    return date.toLocaleDateString("en-GB");
+}
+
+// Every day we know about: { "17/11/2026": { total: 1234.5, orders: 40 }, ... }
+// total = completed sales only; orders = every order placed.
+// Past days come from salesHistory (all completed), today from live orders.
+function salesByDay(orderList) {
+
+    const days = {};
+
+    function day(key) {
+        if (!days[key]) days[key] = { total: 0, orders: 0 };
+        return days[key];
+    }
+
+    salesHistory.forEach(function(past) {
+        const entry = day(past.date);
+        entry.total += past.total;
+        entry.orders += past.orders;
+    });
+
+    orderList.forEach(function(order) {
+        if (!parseOrderDate(order.date)) return;
+        const entry = day(order.date);
+        entry.orders += 1;
+        if (order.status === "Completed") entry.total += Number(order.total || 0);
+    });
+
+    return days;
+}
+
+// The last `count` days, oldest first, today last
+function lastDays(orderList, count = 7) {
+
+    const days = salesByDay(orderList);
+    const today = new Date();
+    const result = [];
+
+    for (let i = count - 1; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        const entry = days[dayKey(date)] || { total: 0, orders: 0 };
+        result.push({ date: date, total: entry.total, orders: entry.orders });
+    }
+
+    return result;
+}
+
+// Each day of one month (month is 0-11), up to today for the current month
+function daysOfMonth(orderList, year, month) {
+
+    const days = salesByDay(orderList);
+    const today = new Date();
+    const lastDay = (year === today.getFullYear() && month === today.getMonth())
+        ? today.getDate()
+        : new Date(year, month + 1, 0).getDate();
+
+    const result = [];
+
+    for (let d = 1; d <= lastDay; d++) {
+        const date = new Date(year, month, d);
+        const entry = days[dayKey(date)] || { total: 0, orders: 0 };
+        result.push({ date: date, total: entry.total, orders: entry.orders });
+    }
+
+    return result;
+}
+
+// The café's opening hours: [8, 9, ... 21] (21 = 9pm-10pm)
+function openingHours() {
+    const hours = [];
+    for (let h = CAFE_OPENS_AT; h < CAFE_CLOSES_AT; h++) hours.push(h);
+    return hours;
+}
+
+// Orders placed in each opening hour today:
+// { hours: [8, ...], counts: [3, ...], total: 55, afterHours: 0 }
+// afterHours = today's orders outside opening hours (shown as a note)
+function ordersByHourToday(orderList) {
+
+    const today = dayKey(new Date());
+    const hours = openingHours();
+    const counts = {};
+    let total = 0;
+    let afterHours = 0;
+
+    orderList.forEach(function(order) {
+        if (order.date !== today || !order.createdAt) return;
+        const hour = new Date(order.createdAt).getHours();
+        total += 1;
+        if (hour < CAFE_OPENS_AT || hour >= CAFE_CLOSES_AT) afterHours += 1;
+        else counts[hour] = (counts[hour] || 0) + 1;
+    });
+
+    return {
+        hours: hours,
+        counts: hours.map(function(h) { return counts[h] || 0; }),
+        total: total,
+        afterHours: afterHours
+    };
+}
+
+// A usual day: average orders in each opening hour over the last
+// `dayCount` past days that have hourly figures (salesHistory).
+// Returns { averages: [1.4, ...] } or null when there is no hourly history.
+function usualDayByHour(dayCount = 28) {
+
+    const recent = salesHistory
+        .filter(function(day) { return day.hours; })
+        .slice(-dayCount);
+
+    if (recent.length === 0) return null;
+
+    return {
+        days: recent.length,
+        averages: openingHours().map(function(h) {
+            const sum = recent.reduce(function(total, day) { return total + (day.hours[h] || 0); }, 0);
+            return Math.round(sum / recent.length * 10) / 10;
+        })
+    };
+}
+
+// 13 -> "1pm", 0 -> "12am"
+function hourLabel(hour) {
+    const h = hour % 12 === 0 ? 12 : hour % 12;
+    return h + (hour < 12 ? "am" : "pm");
+}
+
+// Sales per menu category in one month: [["Rice", 12345.6], ...], biggest first.
+// Past days only store how many of each dish sold, so they are priced
+// at today's menu price. Dishes no longer on the menu go to "Other".
+function salesByCategory(orderList, year, month) {
+
+    const dishes = {};
+    newMenuCollection.concat(menuItems).forEach(function(item) {
+        dishes[item.name] = item;   // the saved menu wins over the built-in one
+    });
+
+    const totals = {};
+
+    function add(name, amount) {
+        const category = dishes[name] ? dishes[name].category : "Other";
+        totals[category] = (totals[category] || 0) + amount;
+    }
+
+    orderList.forEach(function(order) {
+        const date = parseOrderDate(order.date);
+        if (order.status !== "Completed" || !date) return;
+        if (date.getFullYear() !== year || date.getMonth() !== month) return;
+
+        (order.items || []).forEach(function(item) {
+            add(item.name, Number(item.price || 0) * Number(item.quantity || 0));
+        });
+    });
+
+    historyForMonth(year, month).forEach(function(day) {
+        Object.keys(day.items || {}).forEach(function(name) {
+            const price = dishes[name] ? Number(dishes[name].price || 0) : 0;
+            add(name, price * day.items[name]);
+        });
+    });
+
+    return Object.entries(totals)
+        .filter(function(entry) { return entry[1] > 0; })
+        .sort(function(a, b) { return b[1] - a[1]; });
+}
+
+// Average sales for each weekday, Monday first:
+// [{ label: "Mon", name: "Monday", average, days }, ...]
+function weekdayAverages(dayList) {
+
+    const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const fullNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const sums = names.map(function() { return { total: 0, days: 0 }; });
+
+    dayList.forEach(function(day) {
+        const index = (day.date.getDay() + 6) % 7;   // getDay(): Sunday = 0
+        sums[index].total += day.total;
+        sums[index].days += 1;
+    });
+
+    return names.map(function(label, index) {
+        const s = sums[index];
+        return { label: label, name: fullNames[index], average: s.days ? s.total / s.days : 0, days: s.days };
+    });
+}
+
+// "RM 12.3k" for tight axis labels
+function shortRM(value) {
+    return value >= 1000
+        ? "RM " + (value / 1000).toLocaleString("en-MY", { maximumFractionDigits: 1 }) + "k"
+        : "RM " + Math.round(value).toLocaleString("en-MY");
+}
+
+
+// ======================================
+// 5. SPARKLINE (tiny 7-day trend inside a summary card)
+// ======================================
+
+// days: from lastDays(); field: "total" (RM) or "orders"
+function drawSparkline(canvas, days, field) {
+
+    if (!canvas) return null;
+
+    const values = days.map(function(day) { return day[field]; });
+    const isMoney = field === "total";
+
+    function format(value) {
+        return isMoney ? formatRM(value) : value.toLocaleString("en-MY") + " orders";
+    }
+
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", "Last 7 days: " + days.map(function(day, i) {
+        return day.date.toLocaleDateString("en-GB", { weekday: "short" }) + " " + format(values[i]);
+    }).join(", "));
+
+    return new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+            labels: days.map(function(day, i) {
+                return i === days.length - 1
+                    ? "Today"
+                    : day.date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+            }),
+            datasets: [{
+                data: values,
+                borderColor: CHART_COLORS.accent,
+                borderWidth: 2,
+                tension: 0.35,
+                fill: false,
+                // Only the last point (today) gets a dot
+                pointRadius: values.map(function(v, i) { return i === values.length - 1 ? 3 : 0; }),
+                pointBackgroundColor: CHART_COLORS.accent,
+                pointHoverRadius: 4,
+                pointHitRadius: 12
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: { padding: { top: 4, bottom: 4, left: 2, right: 4 } },
+            interaction: { mode: "index", intersect: false },
+
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) { return format(context.parsed.y); }
+                    }
+                }
+            },
+
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
 }
